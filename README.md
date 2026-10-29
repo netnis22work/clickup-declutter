@@ -19,7 +19,7 @@ A Chrome extension that hides ClickUp's AI entry points, Chat/Channels/DMs, "Wha
 4. Reload your ClickUp tab.
 
 ## Use
-- Click the toolbar icon to toggle items by group. Changes apply instantly. The badge shows how many rules are active on the current ClickUp tab.
+- Click the toolbar icon to toggle items by group. Changes apply instantly.
 - **Pick element**: hover over anything, use ↑/↓ to select the parent or child, then click or press Enter to hide it. Esc cancels. A "Hidden · Undo" toast lets you take it back. Picked items get a readable name (click it to rename), and × brings one back.
 - **Alt+Shift+D** turns Declutter on or off, which is handy when someone asks "where's button X?". You can change the shortcut in Settings.
 - The popup follows your ClickUp look: light or dark mode and your workspace theme color.

@@ -7,17 +7,35 @@
   const active = () => (state.off ? [] : CUD_RULES.filter(isOn));
   const activeCustom = () => (state.off ? [] : state.custom);
 
-  // Messaging the extension throws once the extension is reloaded or updated
-  // (this old content script stays on the page), so every call goes through here.
-  const send = (msg) => { try { chrome.runtime.sendMessage(msg).catch(() => {}); } catch {} };
-
   // ---------- CSS layer ----------
+  // Everything that can be CSS is CSS, injected before ClickUp renders, so hidden items
+  // never paint, even for a frame.
   const style = document.createElement('style');
   style.id = 'cud-style';
   (document.head || document.documentElement).appendChild(style);
 
+  // Settings arrive asynchronously, a few milliseconds after ClickUp may already paint.
+  // Bridge that gap with the CSS built on the previous visit, cached in this origin's
+  // localStorage, which a content script can read synchronously at document_start.
+  const CACHE_KEY = 'cud-css-cache';
+  let cachedCss = null;
+  try { cachedCss = localStorage.getItem(CACHE_KEY); } catch {}
+
   const validSelector = (s) => {
     try { document.createDocumentFragment().querySelector(s); return true; } catch { return false; }
+  };
+
+  // Home sidebar is a flat cdk virtual tree: a section's rows are the siblings after
+  // its header, up to the next top-level (aria-level 1) row. Hide the header, those rows,
+  // and the empty spacer row just above the header.
+  const sectionSelectors = (name) => {
+    const n = name.replace(/"/g, '\\"');
+    const header = `cdk-tree-node:has([data-test-section-name="${n}"])`;
+    return [
+      `cu-home-sidebar ${header}`,
+      `cu-home-sidebar ${header} ~ cdk-tree-node:not([aria-level="1"]):not(${header} ~ cdk-tree-node[aria-level="1"] ~ *)`,
+      `cu-home-sidebar cdk-tree-node:not(:has([data-test])):has(+ cdk-tree-node [data-test-section-name="${n}"])`,
+    ];
   };
 
   function buildCss() {
@@ -25,11 +43,12 @@
     for (const r of active()) {
       if (r.css) sels.push(r.css);
       if (r.row) sels.push(`cdk-tree-node:has([data-test="${r.row}"])`);
+      if (r.section) sels.push(...sectionSelectors(r.section));
     }
     sels.push(...activeCustom().map((c) => c.sel).filter(validSelector));
     sels.push(`.${HIDDEN}`);
     // One rule per selector so a single bad selector can't break the rest.
-    style.textContent = sels.map((s) => `${s}{display:none!important}`).join('\n') +
+    return sels.map((s) => `${s}{display:none!important}`).join('\n') +
       // ClickUp pins the rail's item list to the height it measured at load and doesn't
       // re-measure when rules change, which leaves a gap above "More" (or clips items when
       // turning rules off). Let the list size itself to whatever is visible. Kept even when
@@ -39,20 +58,6 @@
 
   // ---------- JS layer (things CSS can't express) ----------
   const sectionButton = (name) => document.querySelector(`cu-home-sidebar [data-test-section-name="${CSS.escape(name)}"]`);
-
-  // Home sidebar is a flat cdk virtual tree: a section's children are the following
-  // sibling nodes with aria-level > 1, so hide the header and walk forward.
-  function hideSection(name) {
-    const btn = sectionButton(name);
-    const node = btn && btn.closest('cdk-tree-node');
-    if (!node) return;
-    const prev = node.previousElementSibling;
-    if (prev && !prev.querySelector('[data-test]') && !prev.textContent.trim()) prev.classList.add(HIDDEN);
-    node.classList.add(HIDDEN);
-    for (let n = node.nextElementSibling; n && Number(n.getAttribute('aria-level')) > 1; n = n.nextElementSibling) {
-      n.classList.add(HIDDEN);
-    }
-  }
 
   // Fallback for announcement cards that don't come from Chameleon:
   // a small fixed box with an "N of M" pager and a Next button.
@@ -108,13 +113,11 @@
     chrome.storage.local.set({ cudTheme: theme });
   }
 
-  // ---------- Rule health + badge ----------
+  // ---------- Rule health ----------
   // Records the last day each rule found its element, and which days ClickUp was used
   // (per scope). The popup flags rules that found nothing over the last few days of use.
-  // Also reports how many rules matched on this page for the toolbar badge.
   let health = null;
   let lastHealthCheck = 0;
-  let lastCount = -1;
   chrome.storage.local.get('cudHealth', ({ cudHealth }) => { health = { days: {}, seen: {}, ...cudHealth }; });
 
   const isTaskPage = () => !!document.querySelector('cu-task-view-section-header, [data-test^="task-view"]');
@@ -135,9 +138,7 @@
     const d = new Date();
     const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     let changed = false;
-    let count = 0;
     const mark = (id) => {
-      count++;
       if (health.seen[id] !== today) { health.seen[id] = today; changed = true; }
     };
     for (const r of active()) if (present(r)) mark(r.id);
@@ -153,7 +154,6 @@
       }
     }
     if (changed) chrome.storage.local.set({ cudHealth: health });
-    if (count !== lastCount) { lastCount = count; send({ type: 'cud-count', count }); }
   }
 
   // ---------- Sweep ----------
@@ -161,7 +161,6 @@
     captureTheme();
     document.querySelectorAll(`.${HIDDEN}`).forEach((e) => e.classList.remove(HIDDEN));
     for (const r of active()) {
-      if (r.section) hideSection(r.section);
       if (r.js === 'tourCards' && document.body) hideTourCards();
       if (r.js === 'slashAi') hideSlashAi();
     }
@@ -176,10 +175,18 @@
   };
   new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
 
-  function apply() { buildCss(); lastHealthCheck = 0; sweep(); }
+  // Builds and applies the CSS for the current settings, and caches it for next load.
+  function apply() {
+    const css = buildCss();
+    style.textContent = css;
+    try { localStorage.setItem(CACHE_KEY, css); } catch {}
+    lastHealthCheck = 0;
+    sweep();
+  }
 
-  // Defaults immediately (no flash), then real settings once storage answers.
-  apply();
+  // Last visit's CSS (or the defaults on a first visit) immediately, then the real
+  // settings once storage answers.
+  style.textContent = cachedCss || buildCss();
   chrome.storage.sync.get('cud', ({ cud }) => { state = cudState(cud); apply(); });
   chrome.storage.onChanged.addListener((ch, area) => {
     if (area !== 'sync' || !ch.cud) return;

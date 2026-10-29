@@ -23,7 +23,8 @@ The extension is deliberately small so it's easy to audit:
 | Remote code | None. No CDN scripts, no `eval`, no `new Function`. Everything runs from the packaged files. |
 | Page interaction | Content scripts run in Chrome's isolated world. They only add CSS and toggle a class that hides elements, and they never read or change workspace data. |
 | Custom selectors | Selectors saved with "Pick element" are only used inside CSS `display:none` rules. They're validated before use, and a bad selector is skipped. |
-| Service worker | `background.js` only handles the toggle shortcut and sets the per-tab badge count. It runs no network code. |
+| Service worker | `background.js` only handles the toggle shortcut. It runs no network code. |
+| CSS cache | The generated hide CSS (selectors only) is cached in `app.clickup.com`'s `localStorage` so it can be applied synchronously at page start. It's read back only as CSS text for the extension's own `<style>` element, and then replaced with freshly built CSS once settings load. |
 | Settings import | Imported text must be Declutter's own format. Only known rule ids with boolean values and syntactically valid selectors (max 200, under 500 characters each) are kept, and everything else is dropped. Selectors are only ever used inside `display:none` CSS rules. |
 | Theme colors | ClickUp color tokens copied into `storage.local` are only applied to the popup after `CSS.supports('color', value)` accepts them, so nothing but a valid color reaches its styles. |
 | Messages | The content script accepts one message (`cud-pick`) from its own popup. It ignores messages from web pages. |

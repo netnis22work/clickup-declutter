@@ -12,6 +12,7 @@
 - In-task cleanup: hides "Ask Brain" cards, Ask Brain² in the comment bar, AI buttons in the editor toolbar, AI subtask suggestions, the AI activity summary, and AI entries in the `/` menu.
 - Rule health: notices when a rule stops finding its element after a ClickUp update, marks it with a dot, and offers Report or Ignore in Settings.
 - Settings behind a gear icon: presets (Recommended, Focus, Light touch), copy, save, import and load-file sharing, keyboard shortcut, and reset.
-- Alt+Shift+D toggles Declutter on and off, with an on-page toast. The toolbar badge shows how many rules are active on the current ClickUp tab.
+- Alt+Shift+D toggles Declutter on and off, with an on-page toast.
+- No flash of hidden items: sidebar sections are hidden with pure CSS, and the last-used CSS is applied instantly at page start, before settings finish loading.
 - Picked elements get readable names (click to rename), and a "Hidden · Undo" toast appears right after picking.
 - "Pick element" to hide anything else, with parent/child navigation.
