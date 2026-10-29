@@ -177,53 +177,64 @@ function showSettings(open) {
 $('open-settings').onclick = () => showSettings(true);
 $('close-settings').onclick = () => showSettings(false);
 
+const FLAG = SVG('<path d="M4 22V4a1 1 0 0 1 1-1h11l-2 4 2 4H5"/>');
+const EYE_OFF = SVG('<path d="M3 3l18 18"/><path d="M10.6 5.1A10 10 0 0 1 12 5c5 0 9 4.5 10 7-.4 1-1.2 2.3-2.4 3.5M6.6 6.6C4.4 8 2.8 10.2 2 12c1 2.5 5 7 10 7 1.8 0 3.4-.6 4.8-1.4"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/>');
+const CLOCK = SVG('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>');
+const fmtDay = (d) => new Date(`${d}T00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
 function renderSettings() {
-  // Presets: the one matching the current setup gets a check mark.
-  const presets = $('presets');
-  presets.replaceChildren();
+  // Presets: segmented control; none is selected when the setup is custom.
+  const seg = $('presets');
+  seg.replaceChildren();
+  let currentPreset = null;
   for (const p of CUD_PRESETS) {
     const map = cudPresetMap(p);
     const current = CUD_RULES.every((r) => isOn(r) === map[r.id]);
-    const row = el('button', { className: 'row' + (current ? ' current' : '') },
-      el('span', { className: 'grow', textContent: p.label }, el('span', { className: 'sub', textContent: p.desc })),
-      html('span', 'check', CHECK));
-    row.onclick = () => { state.enabled = map; state.off = false; save(); render(); };
-    presets.append(row);
+    if (current) currentPreset = p;
+    const b = el('button', { textContent: p.label, role: 'radio', ariaChecked: String(current), title: p.desc });
+    b.onclick = () => { state.enabled = map; state.off = false; save(); render(); };
+    seg.append(b);
   }
+  $('preset-desc').textContent = currentPreset ? currentPreset.desc : 'Custom setup';
 
   // Rule health
   const box = $('health');
   box.replaceChildren();
   const broken = needsUpdate();
   const usedDays = ((health.days && health.days.app) || []).length;
+  const status = (icon, iconClass, label, sub, trail) => {
+    const row = el('div', { className: 'mrow' }, html('span', iconClass, icon), el('span', { className: 'label', textContent: label }, sub ? el('small', { textContent: sub }) : ''));
+    if (trail) row.append(trail);
+    return row;
+  };
   if (broken.length) {
-    box.append(el('p', { className: 'hint', textContent: `${broken.length} rule${broken.length === 1 ? '' : 's'} didn't find anything on ClickUp lately. ClickUp may have changed, or the item isn't in your plan.` }));
-    const card = el('div', { className: 'card' });
     for (const b of broken) {
-      const report = el('button', { className: 'link', textContent: 'Report' });
+      const report = html('button', 'ib', FLAG);
+      report.title = 'Report on GitHub';
       report.onclick = () => openTab(`${REPO}/issues/new?${new URLSearchParams({
         title: `Rule needs updating: ${b.label}`,
         body: `Rule \`${b.id}\` hasn't matched anything lately.\n\nExtension version: ${chrome.runtime.getManifest().version}`,
       })}`);
-      const ignore = el('button', { className: 'link', textContent: 'Ignore' });
+      const ignore = html('button', 'ib', EYE_OFF);
+      ignore.title = 'Ignore this rule';
       ignore.onclick = () => { state.ignored.push(b.id); save(); render(); };
-      card.append(el('div', { className: 'row' },
-        el('span', { className: 'grow', textContent: b.label }, el('span', { className: 'sub', textContent: b.seen ? `Last found ${b.seen}` : 'Not found yet' })),
-        report, ignore));
+      box.append(status('', 'warn-icon', b.label, b.seen ? `Not found since ${fmtDay(b.seen)}` : 'Not found yet', el('span', { className: 'trail' }, report, ignore)));
     }
-    box.append(card);
+    box.append(el('p', { className: 's-desc', textContent: 'ClickUp may have changed, or the item isn\'t in your plan.' }));
+  } else if (usedDays < 3) {
+    box.append(status(CLOCK, 'ok-muted', 'Checking rules', 'Verified as you use ClickUp over the next few days'));
   } else {
-    box.append(el('p', { className: 'ok', textContent: usedDays < 3 ? 'Checking. Each rule is verified as you use ClickUp over the next few days.' : 'All rules are finding their ClickUp elements.' }));
+    box.append(status(CHECK, 'ok-icon', 'All rules working', `Checked over your last ${Math.min(usedDays, 14)} days of use`));
   }
   if (state.ignored.length) {
-    const unignore = el('button', { className: 'link', textContent: `Stop ignoring ${state.ignored.length}` });
+    const unignore = el('button', { className: 'link', textContent: `${state.ignored.length} ignored · Show again` });
     unignore.onclick = () => { state.ignored = []; save(); render(); };
-    box.append(el('p', { className: 'hint' }, unignore));
+    box.append(el('p', { className: 's-desc' }, unignore));
   }
 
   chrome.commands.getAll((cmds) => {
     const c = cmds.find((x) => x.name === 'toggle-declutter');
-    $('shortcut').replaceChildren(c && c.shortcut ? el('kbd', { textContent: c.shortcut }) : el('span', { className: 'ok', textContent: 'Not set' }));
+    $('shortcut').replaceChildren(...(c && c.shortcut ? c.shortcut.split('+').map((k) => el('kbd', { textContent: k })) : [el('span', { textContent: 'Not set' })]));
   });
 
   const v = chrome.runtime.getManifest().version;
@@ -231,7 +242,7 @@ function renderSettings() {
   gh.onclick = () => openTab(REPO);
   const privacy = el('button', { className: 'link', textContent: 'Privacy' });
   privacy.onclick = () => openTab(`${REPO}/blob/main/PRIVACY.md`);
-  $('about').replaceChildren(`Version ${v} · `, gh, ' · ', privacy);
+  $('about').replaceChildren(`Declutter ${v} · `, gh, ' · ', privacy);
 }
 
 $('change-shortcut').onclick = () => openTab('chrome://extensions/shortcuts');
@@ -269,7 +280,13 @@ $('save-file').onclick = () => {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   note('Saved.');
 };
-$('show-import').onclick = () => { $('import-box').hidden = !$('import-box').hidden; note(''); };
+$('show-import').onclick = () => {
+  const open = $('import-box').hidden;
+  $('import-box').hidden = !open;
+  $('show-import').ariaExpanded = String(open);
+  note('');
+  if (open) $('import-text').focus();
+};
 $('load-file').onclick = () => $('file-input').click();
 $('file-input').onchange = async (e) => {
   const file = e.target.files[0];
@@ -282,6 +299,7 @@ $('apply-import').onclick = () => {
     save();
     $('import-text').value = '';
     $('import-box').hidden = true;
+    $('show-import').ariaExpanded = 'false';
     render();
     note(`Imported ${Object.keys(state.enabled).length} rule settings and ${state.custom.length} picked element${state.custom.length === 1 ? '' : 's'}.`);
   } catch (err) {
@@ -293,15 +311,16 @@ $('apply-import').onclick = () => {
 let resetTimer;
 $('reset').onclick = () => {
   const btn = $('reset');
+  const label = $('reset-label');
   if (!btn.classList.contains('confirm')) {
     btn.classList.add('confirm');
-    btn.textContent = 'Confirm';
-    resetTimer = setTimeout(() => { btn.classList.remove('confirm'); btn.textContent = 'Reset'; }, 3000);
+    label.textContent = 'Click again to reset everything';
+    resetTimer = setTimeout(() => { btn.classList.remove('confirm'); label.textContent = 'Reset to defaults'; }, 3000);
     return;
   }
   clearTimeout(resetTimer);
   btn.classList.remove('confirm');
-  btn.textContent = 'Reset';
+  label.textContent = 'Reset to defaults';
   state = cudState();
   save();
   render();

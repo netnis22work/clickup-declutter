@@ -23,6 +23,7 @@
       --accent-fg: #a89fff;
       --danger: #e5484d;
       --warn: #ffb224;
+      --ok: #3dd68c;
       color-scheme: dark;
     }
     @media (prefers-color-scheme: light) {
@@ -39,6 +40,7 @@
         --faint: #8f8f8f;
         --placeholder: #a0a0a0;
         --accent-fg: #6347ea;
+        --ok: #18794e;
         color-scheme: light;
       }
     }
@@ -155,33 +157,63 @@
     /* views */
     [hidden] { display: none !important; }
     #view-settings { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-    .settings { flex: 1; overflow-y: auto; padding: 4px 14px 14px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
-    .settings h3 { margin: 14px 0 6px; font-size: 11px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
-    .settings h3:first-child { margin-top: 8px; }
-    .hint { margin: 0 0 8px; font-size: 12px; color: var(--faint); }
-    .card { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-    .row { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 6px 10px; }
-    .row + .row { border-top: 1px solid var(--line-soft); }
-    .row .grow { flex: 1; min-width: 0; }
-    .row .sub { display: block; font-size: 11px; color: var(--faint); }
-    button.row { width: 100%; border: 0; background: none; text-align: left; cursor: pointer; }
-    button.row:hover { background: var(--hover); }
-    .check { color: var(--accent); visibility: hidden; }
-    .row.current .check { visibility: visible; }
-    .btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
-    .btn-row .btn { flex: 1; }
-    .link { border: 0; background: none; padding: 0; color: var(--accent-fg); cursor: pointer; font-size: 12px; }
-    .link:hover { text-decoration: underline; }
+    /* settings: ClickUp-style menu rows */
+    .settings { flex: 1; overflow-y: auto; padding: 4px 8px 10px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+    .s-group { padding: 6px 0; }
+    .s-group + .s-group { border-top: 1px solid var(--line-soft); }
+    .s-title { padding: 4px 8px 6px; font-size: 11px; font-weight: 500; color: var(--faint); }
+    .s-desc { margin: 6px 8px 2px; font-size: 12px; color: var(--faint); }
+
+    .seg { display: flex; gap: 2px; margin: 0 8px; padding: 2px; border-radius: 7px; background: var(--surface); border: 1px solid var(--line); }
+    .seg button {
+      flex: 1; height: 26px; border: 0; border-radius: 5px; background: none; cursor: pointer;
+      color: var(--muted); font-size: 12px; font-weight: 500; transition: background .12s ease, color .12s ease;
+    }
+    .seg button:hover { color: var(--fg); }
+    .seg button[aria-checked="true"] { background: var(--surface-hover); color: var(--fg); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+
+    .mrow {
+      display: flex; align-items: center; gap: 10px; width: 100%; min-height: 32px; padding: 4px 8px;
+      border: 0; border-radius: 6px; background: none; color: var(--fg); text-align: left; font-size: 13px;
+    }
+    button.mrow { cursor: pointer; }
+    button.mrow:hover { background: var(--hover); }
+    .mrow > svg:first-child { color: var(--muted); }
+    .mrow .label { flex: 1; min-width: 0; }
+    .mrow .label small { display: block; font-size: 11px; color: var(--faint); }
+    .mrow .trail { margin-left: auto; display: flex; align-items: center; gap: 4px; color: var(--faint); font-size: 12px; }
+    .mrow.danger, .mrow.danger > svg:first-child { color: var(--danger); }
+    .mrow > span:first-child:not(.label) { width: 14px; display: grid; place-items: center; flex: none; }
+    .mrow .ok-icon { color: var(--ok); }
+    .mrow .ok-muted { color: var(--faint); }
+    .mrow.confirm { background: color-mix(in srgb, var(--danger) 14%, transparent); }
+    .mrow .warn-icon { width: 14px; display: grid; place-items: center; }
+    .mrow .warn-icon::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
+    .ib { width: 24px; height: 24px; display: grid; place-items: center; border: 0; border-radius: 5px; background: none; color: var(--faint); cursor: pointer; }
+    .ib:hover { background: var(--surface-hover); color: var(--fg); }
+
+    .chev-r svg { transition: transform .12s ease; }
+    #show-import[aria-expanded="true"] .chev-r svg { transform: rotate(180deg); }
+    .import { padding: 4px 8px 6px; }
+    .import-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
     textarea {
-      width: 100%; height: 90px; margin-top: 8px; padding: 8px; resize: vertical; border-radius: 6px;
+      display: block; width: 100%; height: 84px; padding: 8px; resize: none; border-radius: 6px;
       border: 1px solid var(--line); background: var(--bg); color: var(--fg);
       font: 11px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; outline: none;
     }
     textarea:focus { border-color: var(--accent); }
-    kbd { padding: 2px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; font: 11px ui-monospace, Consolas, monospace; color: var(--fg); background: var(--surface); }
-    .ok { color: var(--muted); font-size: 12px; }
-    .note { margin-top: 8px; font-size: 12px; color: var(--muted); }
+    textarea::placeholder { color: var(--placeholder); }
+    kbd {
+      min-width: 20px; height: 20px; padding: 0 5px; display: inline-grid; place-items: center;
+      border: 1px solid var(--line); border-radius: 4px; background: var(--surface);
+      font: 500 11px/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: var(--muted);
+    }
+    .note { margin: 4px 8px 0; font-size: 12px; color: var(--ok); }
     .note.error { color: var(--danger); }
+    .note:empty { display: none; }
+    .link { border: 0; background: none; padding: 0; color: var(--muted); cursor: pointer; font-size: 11px; }
+    .link:hover { color: var(--fg); text-decoration: underline; }
+    .about { margin: 10px 0 0; text-align: center; font-size: 11px; color: var(--faint); }
     .chip-name { flex: 1; min-width: 0; }
     .chip-name b { display: block; font-weight: 400; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: text; }
     .chip-name input { width: 100%; height: 22px; padding: 0 6px; border: 1px solid var(--accent); border-radius: 5px; background: var(--bg); color: var(--fg); font: inherit; outline: none; }
@@ -229,44 +261,56 @@
       <div class="title"><b>Settings</b></div>
     </header>
     <div class="settings">
-      <h3>Presets</h3>
-      <div class="card" id="presets"></div>
+      <section class="s-group">
+        <div class="s-title">Preset</div>
+        <div class="seg" id="presets" role="radiogroup" aria-label="Preset"></div>
+        <p class="s-desc" id="preset-desc"></p>
+      </section>
 
-      <h3>Rule health</h3>
-      <div id="health"></div>
+      <section class="s-group">
+        <div class="s-title">Rule health</div>
+        <div id="health"></div>
+      </section>
 
-      <h3>Share settings</h3>
-      <p class="hint">Copy your setup and paste it on a teammate's browser. Nothing is uploaded.</p>
-      <div class="btn-row">
-        <button class="btn" id="copy">Copy</button>
-        <button class="btn" id="save-file">Save file</button>
-        <button class="btn" id="show-import">Import</button>
-      </div>
-      <div id="import-box" hidden>
-        <textarea id="import-text" placeholder="Paste settings here" spellcheck="false"></textarea>
-        <div class="btn-row" style="margin-top:6px">
-          <button class="btn primary" id="apply-import">Apply</button>
-          <button class="btn" id="load-file">Load file</button>
+      <section class="s-group">
+        <div class="s-title">Share with your team</div>
+        <button class="mrow" id="copy">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+          <span class="label">Copy settings</span>
+        </button>
+        <button class="mrow" id="save-file">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          <span class="label">Export to file</span>
+        </button>
+        <button class="mrow" id="show-import" aria-expanded="false">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V9M7 14l5-5 5 5M5 3h14"/></svg>
+          <span class="label">Import settings</span>
+          <span class="trail chev-r"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></span>
+        </button>
+        <div class="import" id="import-box" hidden>
+          <textarea id="import-text" placeholder="Paste settings from a teammate" spellcheck="false"></textarea>
+          <div class="import-actions">
+            <button class="btn" id="load-file">Load file</button>
+            <button class="btn primary" id="apply-import" style="flex:none">Apply</button>
+          </div>
+          <input type="file" id="file-input" accept=".json,application/json" hidden>
         </div>
-        <input type="file" id="file-input" accept=".json,application/json" hidden>
-      </div>
-      <div class="note" id="share-note"></div>
+        <p class="note" id="share-note"></p>
+      </section>
 
-      <h3>Keyboard shortcut</h3>
-      <div class="card"><div class="row">
-        <span class="grow">Turn on or off</span>
-        <span id="shortcut"></span>
-        <button class="link" id="change-shortcut">Change</button>
-      </div></div>
+      <section class="s-group">
+        <button class="mrow" id="change-shortcut" title="Change in Chrome's shortcut settings">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
+          <span class="label">On/off shortcut</span>
+          <span class="trail" id="shortcut"></span>
+        </button>
+        <button class="mrow danger" id="reset">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          <span class="label" id="reset-label">Reset to defaults</span>
+        </button>
+      </section>
 
-      <h3>Reset</h3>
-      <div class="card"><div class="row">
-        <span class="grow">Restore defaults<span class="sub">Turns every rule back to default and removes picked elements.</span></span>
-        <button id="reset" class="btn">Reset</button>
-      </div></div>
-
-      <h3>About</h3>
-      <p class="hint" id="about"></p>
+      <p class="about" id="about"></p>
     </div>
   </div>
 
