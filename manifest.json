@@ -1,8 +1,11 @@
 {
   "manifest_version": 3,
-  "name": "ClickUp Declutter",
+  "name": "Declutter for ClickUp",
+  "short_name": "Declutter",
   "version": "1.0.0",
-  "description": "Hide AI, chat, upsell and popup clutter in ClickUp.",
+  "description": "Hide the AI, chat, upsell and popup clutter in ClickUp. Toggle each item, or pick any element to hide.",
+  "homepage_url": "https://github.com/netnis22work/clickup-declutter",
+  "minimum_chrome_version": "105",
   "permissions": ["storage"],
   "host_permissions": ["https://app.clickup.com/*"],
   "content_scripts": [
@@ -14,9 +17,9 @@
     }
   ],
   "action": {
-    "default_title": "ClickUp Declutter",
+    "default_title": "Declutter for ClickUp",
     "default_popup": "popup.html",
-    "default_icon": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
+    "default_icon": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" }
   },
-  "icons": { "16": "icons/16.png", "48": "icons/48.png", "128": "icons/128.png" }
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" }
 }

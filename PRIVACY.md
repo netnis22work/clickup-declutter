@@ -1,0 +1,29 @@
+# Privacy Policy: Declutter for ClickUp
+
+_Last updated: October 29, 2026_
+
+Declutter for ClickUp ("the extension") hides parts of the ClickUp web app's interface. This policy explains what the extension does and does not do with your data.
+
+## Short version
+The extension **does not collect, transmit, sell, or share any personal or usage data.** It has no servers, no analytics, no tracking, and no third-party code.
+
+## What the extension accesses
+- **ClickUp pages (`https://app.clickup.com/*`).** The extension injects CSS and a small script that hides interface elements. It reads the page structure (element tags, classes, attributes and short labels) only to decide what to hide. It does not read, store, or send your tasks, comments, documents, names, or any other workspace content.
+- **Your settings.** Your on/off choices and any elements you hid with "Pick element" are saved with `chrome.storage.sync`. Chrome keeps this in your browser profile and, if you have Chrome Sync turned on, syncs it to your Google account under Google's own privacy policy. The developer never receives this data.
+
+## What the extension does not do
+- No network requests of any kind.
+- No remote code: every script ships inside the extension package.
+- No cookies, browsing history, or access to other websites.
+- No data sold or transferred to third parties, and no data used for advertising, creditworthiness, or lending.
+
+## Chrome Web Store Limited Use
+The use of information received from Chrome APIs follows the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/user-data-faq), including the Limited Use requirements.
+
+## Changes
+If this policy changes, the new version will be published at this URL and noted in the [changelog](CHANGELOG.md). Any change that adds data collection would ship with an in-extension notice before it takes effect.
+
+## Contact
+Open an issue at https://github.com/netnis22work/clickup-declutter/issues.
+
+_Declutter for ClickUp is an independent project and is not affiliated with, endorsed by, or sponsored by ClickUp. "ClickUp" is a trademark of its respective owner._

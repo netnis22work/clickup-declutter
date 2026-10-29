@@ -47,8 +47,12 @@
   function hideTourCards() {
     const roots = [...document.body.children, ...document.querySelectorAll('.cdk-overlay-container > *')];
     for (const el of roots) {
-      if (el.id === 'cud-picker') continue;
-      const text = el.innerText || '';
+      if (el.id === 'cud-picker' || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+      // Skip the app root and other big containers: cards are small, and reading
+      // text from the whole app on every mutation would be expensive.
+      const box = el.getBoundingClientRect();
+      if (!box.width || box.width > 700 || box.height > 700) continue;
+      const text = el.textContent || '';
       if (text.length > 800 || !/\b\d+ of \d+\b/.test(text) || !/\bNext\b/.test(text)) continue;
       el.classList.add(HIDDEN);
     }
