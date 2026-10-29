@@ -7,7 +7,15 @@ cd "$(dirname "$0")/.."
 version=$(grep -m1 '"version"' manifest.json | sed -E 's/.*"version": *"([^"]+)".*/\1/')
 out="dist/declutter-for-clickup-${version}.zip"
 
+files=(manifest.json rules.js content.js content.css popup.html popup.js LICENSE icons/*.png)
+
 mkdir -p dist
 rm -f "$out"
-zip -q -X "$out" manifest.json rules.js content.js content.css popup.html popup.js LICENSE icons/*.png
+if command -v zip >/dev/null; then
+  zip -q -X "$out" "${files[@]}"
+else
+  python3 -c 'import sys, zipfile
+with zipfile.ZipFile(sys.argv[1], "w", zipfile.ZIP_DEFLATED) as z:
+    [z.write(f) for f in sys.argv[2:]]' "$out" "${files[@]}"
+fi
 echo "Built $out ($(du -h "$out" | cut -f1))"
