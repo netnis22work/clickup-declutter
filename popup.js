@@ -234,7 +234,9 @@ function renderSettings() {
 
   chrome.commands.getAll((cmds) => {
     const c = cmds.find((x) => x.name === 'toggle-declutter');
-    $('shortcut').replaceChildren(...(c && c.shortcut ? c.shortcut.split('+').map((k) => el('kbd', { textContent: k })) : [el('span', { textContent: 'Not set' })]));
+    // Chrome only assigns the suggested Alt+Shift+D on first install, and skips it if
+    // another extension already uses it, so "not set" needs a clear way to fix it.
+    $('shortcut').replaceChildren(...(c && c.shortcut ? c.shortcut.split('+').map((k) => el('kbd', { textContent: k })) : [el('span', { className: 'set-link', textContent: 'Set shortcut' })]));
   });
 
   const v = chrome.runtime.getManifest().version;

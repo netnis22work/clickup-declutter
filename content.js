@@ -29,7 +29,12 @@
     sels.push(...activeCustom().map((c) => c.sel).filter(validSelector));
     sels.push(`.${HIDDEN}`);
     // One rule per selector so a single bad selector can't break the rest.
-    style.textContent = sels.map((s) => `${s}{display:none!important}`).join('\n');
+    style.textContent = sels.map((s) => `${s}{display:none!important}`).join('\n') +
+      // ClickUp pins the rail's item list to the height it measured at load and doesn't
+      // re-measure when rules change, which leaves a gap above "More" (or clips items when
+      // turning rules off). Let the list size itself to whatever is visible. Kept even when
+      // paused so items shown again aren't clipped.
+      '\ncu-simple-bar .cu-simple-bar__body-items{height:auto!important}';
   }
 
   // ---------- JS layer (things CSS can't express) ----------
