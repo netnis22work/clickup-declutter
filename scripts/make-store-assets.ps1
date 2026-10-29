@@ -1,6 +1,7 @@
 # Builds the extension icons and Chrome Web Store images.
 # Usage: powershell -File scripts/make-store-assets.ps1 -Before <png|jpg> -After <png|jpg> -Popup <png|jpg>
-# Inputs are raw tab screenshots (any size, 16:10 region taken from the left edge).
+# Before/After are raw tab screenshots (any size, 16:10 region taken from the left edge).
+# Popup is a screenshot of popup.html alone (340px wide), composited over the After shot.
 # Optional -Blur "x1,y1,x2,y2" pixelates a region of the Before shot (in its own pixels).
 param(
   [string]$Before,
@@ -100,10 +101,25 @@ function Load-Shot($path, $blurRect) {
 
 $beforeImg = Load-Shot $Before $Blur
 $afterImg = Load-Shot $After $null
-$popupImg = Load-Shot $Popup $null
 $beforeImg.Save((Join-Path $store 'screenshot-3-before.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 $afterImg.Save((Join-Path $store 'screenshot-2-after.png'), [System.Drawing.Imaging.ImageFormat]::Png)
-$popupImg.Save((Join-Path $store 'screenshot-4-popup.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+
+# Screenshot 4: popup panel over a dimmed After shot, anchored top-right like a real extension popup
+$panel = [System.Drawing.Image]::FromFile((Resolve-Path $Popup))
+$b, $g = New-Canvas 1280 800
+$g.DrawImage($afterImg, 0, 0, 1280, 800)
+$g.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(110, 0, 0, 0))), 0, 0, 1280, 800)
+$pw = [int]($panel.Width * 1.25); $ph = [int]($panel.Height * 1.25)
+$px = 1280 - $pw - 48; $py = 20
+for ($i = 1; $i -le 8; $i++) {
+  $g.FillPath((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(10, 0, 0, 0))), (RoundRect ($px - $i) ($py - $i + 6) ($pw + 2 * $i) ($ph + 2 * $i) (14 + $i)))
+}
+$g.SetClip((RoundRect $px $py $pw $ph 14))
+$g.DrawImage($panel, $px, $py, $pw, $ph)
+$g.ResetClip()
+$g.DrawPath((New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(60, 255, 255, 255)), 1), (RoundRect $px $py $pw $ph 14))
+$b.Save((Join-Path $store 'screenshot-4-popup.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+$g.Dispose(); $b.Dispose(); $panel.Dispose()
 
 $white = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::White)
 $muted = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(185, 182, 205))
@@ -164,7 +180,7 @@ Framed $g $afterImg 660 70 784 490
 $b.Save((Join-Path $store 'promo-marquee-1400x560.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 $g.Dispose(); $b.Dispose()
 
-$beforeImg.Dispose(); $afterImg.Dispose(); $popupImg.Dispose()
+$beforeImg.Dispose(); $afterImg.Dispose()
 Get-ChildItem $store, $icons -Filter *.png | ForEach-Object {
   $i = [System.Drawing.Image]::FromFile($_.FullName); "{0,-34} {1}x{2}" -f $_.Name, $i.Width, $i.Height; $i.Dispose()
 }

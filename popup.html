@@ -3,39 +3,171 @@
 <head>
   <meta charset="utf-8">
   <style>
-    :root { --bg: #fff; --fg: #1d1d1f; --muted: #6e6e73; --line: #e5e5ea; --accent: #7b68ee; }
-    @media (prefers-color-scheme: dark) {
-      :root { --bg: #1c1c1e; --fg: #f2f2f7; --muted: #98989d; --line: #38383a; }
+    :root {
+      --bg: #ffffff;
+      --surface: #f6f5fa;
+      --surface-hover: #efedf7;
+      --fg: #1b1a22;
+      --muted: #6f6c80;
+      --line: #e6e3f0;
+      --track: #d6d3e2;
+      --accent: #7b68ee;
+      --accent-2: #c44cdc;
+      --accent-soft: rgba(123, 104, 238, 0.12);
+      --danger: #e5484d;
+      --shadow: 0 1px 2px rgba(20, 16, 40, 0.06);
     }
-    body { margin: 0; width: 300px; background: var(--bg); color: var(--fg); font: 13px/1.4 system-ui, sans-serif; }
-    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); }
-    h1 { margin: 0; font-size: 14px; }
-    main { max-height: 440px; overflow-y: auto; padding: 4px 14px 10px; }
-    h2 { display: flex; justify-content: space-between; margin: 12px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-    h2 button { border: 0; background: none; color: var(--accent); font-size: 11px; cursor: pointer; padding: 0; }
-    label { display: flex; gap: 8px; align-items: center; padding: 3px 0; cursor: pointer; }
-    input[type=checkbox] { accent-color: var(--accent); margin: 0; }
-    .custom { display: flex; justify-content: space-between; gap: 6px; padding: 3px 0; font: 11px ui-monospace, Consolas, monospace; word-break: break-all; }
-    .custom button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1; }
-    .empty { color: var(--muted); font-size: 12px; }
-    footer { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); }
-    footer button { flex: 1; padding: 7px; border-radius: 6px; border: 1px solid var(--line); background: none; color: var(--fg); cursor: pointer; }
-    footer button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
-    #msg { padding: 0 14px 10px; color: #ff453a; font-size: 12px; }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #16151c;
+        --surface: #1f1e27;
+        --surface-hover: #272632;
+        --fg: #f1f0f7;
+        --muted: #9a97ab;
+        --line: #2c2a37;
+        --track: #3a3847;
+        --accent-soft: rgba(123, 104, 238, 0.2);
+        --shadow: none;
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; width: 340px; max-height: 590px;
+      display: flex; flex-direction: column;
+      background: var(--bg); color: var(--fg);
+      font: 13px/1.4 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font: inherit; color: inherit; }
+    svg { flex: none; }
+
+    /* header */
+    header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; }
+    header img { width: 30px; height: 30px; border-radius: 8px; }
+    .title { flex: 1; min-width: 0; }
+    .title b { display: block; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+    .title span { display: block; font-size: 12px; color: var(--muted); }
+
+    /* switches */
+    .switch {
+      appearance: none; -webkit-appearance: none; margin: 0; flex: none; cursor: pointer;
+      width: 30px; height: 18px; border-radius: 999px; background: var(--track);
+      position: relative; transition: background .15s ease;
+    }
+    .switch::after {
+      content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
+      border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+      transition: transform .15s ease;
+    }
+    .switch:checked { background: var(--accent); }
+    .switch:checked::after { transform: translateX(12px); }
+    /* some items in the group on: tinted track, knob on */
+    .switch:indeterminate { background: color-mix(in srgb, var(--accent) 50%, var(--track)); }
+    .switch:indeterminate::after { transform: translateX(12px); }
+    .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .switch.lg { width: 36px; height: 20px; }
+    .switch.lg::after { width: 16px; height: 16px; }
+    .switch.lg:checked::after { transform: translateX(16px); }
+
+    /* search */
+    .search { position: relative; margin: 0 16px 10px; }
+    .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    .search input {
+      width: 100%; height: 32px; padding: 0 10px 0 32px; border-radius: 8px;
+      border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; outline: none;
+    }
+    .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+    .search input::placeholder { color: var(--muted); }
+
+    /* list */
+    main { flex: 1; overflow-y: auto; padding: 0 12px 12px; scrollbar-width: thin; scrollbar-color: var(--track) transparent; }
+    body.off main { opacity: .45; }
+
+    .group { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; box-shadow: var(--shadow); overflow: hidden; }
+    .group-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 8px; }
+    .group-toggle {
+      flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0;
+      background: none; border: 0; padding: 2px; cursor: pointer; text-align: left; border-radius: 6px;
+    }
+    .group-icon {
+      width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
+      background: var(--accent-soft); color: var(--accent);
+    }
+    .group-name { font-weight: 600; }
+    .count { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .chev { color: var(--muted); transition: transform .15s ease; }
+    .group.collapsed .chev { transform: rotate(-90deg); }
+    .group.collapsed .items { display: none; }
+
+    .items { border-top: 1px solid var(--line); padding: 4px; }
+    .item {
+      display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 10px;
+      border-radius: 6px; cursor: pointer; user-select: none;
+    }
+    .item:hover { background: var(--surface-hover); }
+    .item span { flex: 1; min-width: 0; }
+
+    /* picked */
+    .picked .items { display: flex; flex-direction: column; gap: 2px; }
+    .chip { display: flex; align-items: center; gap: 6px; padding: 5px 6px 5px 10px; border-radius: 6px; }
+    .chip:hover { background: var(--surface-hover); }
+    .chip code { flex: 1; min-width: 0; font: 11px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; color: var(--muted); overflow-wrap: anywhere; }
+    .icon-btn {
+      width: 24px; height: 24px; display: grid; place-items: center; flex: none;
+      border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer;
+    }
+    .icon-btn:hover { background: var(--line); color: var(--fg); }
+    .empty { padding: 8px 10px 10px; color: var(--muted); font-size: 12px; }
+    .no-match { padding: 24px 0; text-align: center; color: var(--muted); }
+
+    /* footer */
+    footer { display: flex; gap: 8px; padding: 12px 16px 14px; border-top: 1px solid var(--line); }
+    .btn {
+      height: 34px; padding: 0 14px; border-radius: 8px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      border: 1px solid var(--line); background: var(--bg); font-weight: 500;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .btn:hover { background: var(--surface-hover); }
+    .btn.primary {
+      flex: 1; border: 0; color: #fff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 4px 14px rgba(123, 104, 238, .35);
+    }
+    .btn.primary:hover { filter: brightness(1.07); }
+    .btn.confirm { border-color: var(--danger); color: var(--danger); }
+
+    #msg { margin: -4px 16px 12px; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: var(--danger); background: rgba(229, 72, 77, .1); }
     #msg:empty { display: none; }
   </style>
 </head>
 <body>
   <header>
-    <h1>Declutter for ClickUp</h1>
-    <label title="Turn everything off"><input type="checkbox" id="master"> On</label>
+    <img src="icons/48.png" alt="">
+    <div class="title">
+      <b>Declutter for ClickUp</b>
+      <span id="summary">&nbsp;</span>
+    </div>
+    <input type="checkbox" class="switch lg" id="master" title="Turn everything on or off" aria-label="Enabled">
   </header>
+
+  <div class="search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="filter" type="search" placeholder="Filter items" autocomplete="off">
+  </div>
+
   <main id="list"></main>
-  <footer>
-    <button id="pick" class="primary">Pick element</button>
-    <button id="reset">Reset</button>
-  </footer>
   <div id="msg"></div>
+
+  <footer>
+    <button id="pick" class="btn primary">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+      Pick element
+    </button>
+    <button id="reset" class="btn" title="Restore default settings">Reset</button>
+  </footer>
+
   <script src="rules.js"></script>
   <script src="popup.js"></script>
 </body>
