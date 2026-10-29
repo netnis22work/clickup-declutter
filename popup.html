@@ -1,0 +1,42 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root { --bg: #fff; --fg: #1d1d1f; --muted: #6e6e73; --line: #e5e5ea; --accent: #7b68ee; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1c1c1e; --fg: #f2f2f7; --muted: #98989d; --line: #38383a; }
+    }
+    body { margin: 0; width: 300px; background: var(--bg); color: var(--fg); font: 13px/1.4 system-ui, sans-serif; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+    h1 { margin: 0; font-size: 14px; }
+    main { max-height: 440px; overflow-y: auto; padding: 4px 14px 10px; }
+    h2 { display: flex; justify-content: space-between; margin: 12px 0 4px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+    h2 button { border: 0; background: none; color: var(--accent); font-size: 11px; cursor: pointer; padding: 0; }
+    label { display: flex; gap: 8px; align-items: center; padding: 3px 0; cursor: pointer; }
+    input[type=checkbox] { accent-color: var(--accent); margin: 0; }
+    .custom { display: flex; justify-content: space-between; gap: 6px; padding: 3px 0; font: 11px ui-monospace, Consolas, monospace; word-break: break-all; }
+    .custom button { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 14px; line-height: 1; }
+    .empty { color: var(--muted); font-size: 12px; }
+    footer { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--line); }
+    footer button { flex: 1; padding: 7px; border-radius: 6px; border: 1px solid var(--line); background: none; color: var(--fg); cursor: pointer; }
+    footer button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+    #msg { padding: 0 14px 10px; color: #ff453a; font-size: 12px; }
+    #msg:empty { display: none; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ClickUp Declutter</h1>
+    <label title="Turn everything off"><input type="checkbox" id="master"> On</label>
+  </header>
+  <main id="list"></main>
+  <footer>
+    <button id="pick" class="primary">Pick element</button>
+    <button id="reset">Reset</button>
+  </footer>
+  <div id="msg"></div>
+  <script src="rules.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

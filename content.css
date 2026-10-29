@@ -1,0 +1,25 @@
+.cud-pick-target {
+  outline: 2px solid #ff3b6b !important;
+  outline-offset: -2px !important;
+  background: rgba(255, 59, 107, 0.12) !important;
+  cursor: crosshair !important;
+}
+
+#cud-picker {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  max-width: 90vw;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #111;
+  color: #fff;
+  font: 12px/1.4 ui-monospace, Consolas, monospace;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
