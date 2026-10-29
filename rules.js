@@ -1,4 +1,4 @@
-// Hide-rule catalog. Shared by content.js, popup.js and background.js.
+// Hide-rule catalog. Shared by content.js and popup.js.
 //   css:     selector(s) hidden with display:none (fast, no flicker)
 //   row:     data-test of a Home-sidebar row (hidden via cdk-tree-node:has(...))
 //   section: name of a Home-sidebar section; header + its rows hidden by CSS
