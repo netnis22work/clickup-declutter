@@ -3,142 +3,145 @@
 <head>
   <meta charset="utf-8">
   <style>
+    /* Tokens mirror ClickUp's own design system. popup.js overwrites them with the
+       live values (light/dark + workspace theme color) captured from app.clickup.com.
+       These defaults are ClickUp's dark theme, used until ClickUp has been opened once. */
     :root {
-      --bg: #ffffff;
-      --surface: #f6f5fa;
-      --surface-hover: #efedf7;
-      --fg: #1b1a22;
-      --muted: #6f6c80;
-      --line: #e6e3f0;
-      --track: #d6d3e2;
-      --accent: #7b68ee;
-      --accent-2: #c44cdc;
-      --accent-soft: rgba(123, 104, 238, 0.12);
+      --bg: #111111;
+      --hover: rgba(255, 255, 255, 0.07);
+      --surface: #191919;
+      --surface-hover: #2a2a2a;
+      --line: #2a2a2a;
+      --line-soft: #222222;
+      --track: #484848;
+      --fg: #eeeeee;
+      --muted: #b4b4b4;
+      --faint: #7b7b7b;
+      --placeholder: #6e6e6e;
+      --accent: #6347ea;
+      --accent-hover: #5c47cd;
+      --accent-fg: #a89fff;
       --danger: #e5484d;
-      --shadow: 0 1px 2px rgba(20, 16, 40, 0.06);
+      color-scheme: dark;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #16151c;
-        --surface: #1f1e27;
-        --surface-hover: #272632;
-        --fg: #f1f0f7;
-        --muted: #9a97ab;
-        --line: #2c2a37;
-        --track: #3a3847;
-        --accent-soft: rgba(123, 104, 238, 0.2);
-        --shadow: none;
+    @media (prefers-color-scheme: light) {
+      :root:not([data-cu]) {
+        --bg: #ffffff;
+        --hover: rgba(0, 0, 0, 0.04);
+        --surface: #f9f9f9;
+        --surface-hover: #f0f0f0;
+        --line: #e8e8e8;
+        --line-soft: #f0f0f0;
+        --track: #d1d1d1;
+        --fg: #202020;
+        --muted: #646464;
+        --faint: #8f8f8f;
+        --placeholder: #a0a0a0;
+        --accent-fg: #6347ea;
+        color-scheme: light;
       }
     }
 
     * { box-sizing: border-box; }
     body {
-      margin: 0; width: 340px; max-height: 590px;
+      margin: 0; width: 320px; max-height: 590px;
       display: flex; flex-direction: column;
       background: var(--bg); color: var(--fg);
-      font: 13px/1.4 "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
     }
     button { font: inherit; color: inherit; }
     svg { flex: none; }
 
     /* header */
-    header { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; }
-    header img { width: 30px; height: 30px; border-radius: 8px; }
-    .title { flex: 1; min-width: 0; }
-    .title b { display: block; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
-    .title span { display: block; font-size: 12px; color: var(--muted); }
+    header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--line-soft); }
+    header img { width: 24px; height: 24px; border-radius: 6px; }
+    .title { flex: 1; min-width: 0; line-height: 1.25; }
+    .title b { display: block; font-size: 13px; font-weight: 600; }
+    .title span { display: block; font-size: 11px; color: var(--faint); }
 
-    /* switches */
+    /* switches: ClickUp-sized, accent when on */
     .switch {
       appearance: none; -webkit-appearance: none; margin: 0; flex: none; cursor: pointer;
-      width: 30px; height: 18px; border-radius: 999px; background: var(--track);
-      position: relative; transition: background .15s ease;
+      width: 26px; height: 16px; border-radius: 999px; background: var(--track);
+      position: relative; transition: background .12s ease;
     }
     .switch::after {
-      content: ""; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px;
-      border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
-      transition: transform .15s ease;
+      content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px;
+      border-radius: 50%; background: #fff; transition: transform .12s ease;
     }
     .switch:checked { background: var(--accent); }
-    .switch:checked::after { transform: translateX(12px); }
-    /* some items in the group on: tinted track, knob on */
-    .switch:indeterminate { background: color-mix(in srgb, var(--accent) 50%, var(--track)); }
-    .switch:indeterminate::after { transform: translateX(12px); }
+    .switch:checked::after { transform: translateX(10px); }
+    /* some items in the group on */
+    .switch:indeterminate { background: color-mix(in srgb, var(--accent) 45%, var(--track)); }
+    .switch:indeterminate::after { transform: translateX(10px); }
     .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .switch.lg { width: 36px; height: 20px; }
-    .switch.lg::after { width: 16px; height: 16px; }
-    .switch.lg:checked::after { transform: translateX(16px); }
 
     /* search */
-    .search { position: relative; margin: 0 16px 10px; }
-    .search svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+    .search { position: relative; padding: 10px 14px 8px; }
+    .search svg { position: absolute; left: 24px; top: 50%; transform: translateY(-50%); margin-top: 1px; color: var(--placeholder); }
     .search input {
-      width: 100%; height: 32px; padding: 0 10px 0 32px; border-radius: 8px;
-      border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: inherit; outline: none;
+      width: 100%; height: 28px; padding: 0 8px 0 28px; border-radius: 6px;
+      border: 1px solid var(--line); background: var(--bg); color: var(--fg); font: inherit; font-size: 12px; outline: none;
     }
-    .search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-    .search input::placeholder { color: var(--muted); }
+    .search input:hover { border-color: var(--track); }
+    .search input:focus { border-color: var(--accent); }
+    .search input::placeholder { color: var(--placeholder); }
 
     /* list */
-    main { flex: 1; overflow-y: auto; padding: 0 12px 12px; scrollbar-width: thin; scrollbar-color: var(--track) transparent; }
-    body.off main { opacity: .45; }
+    main { flex: 1; overflow-y: auto; padding: 0 8px 8px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+    body.off main { opacity: .4; }
 
-    .group { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; box-shadow: var(--shadow); overflow: hidden; }
-    .group-head { display: flex; align-items: center; gap: 8px; padding: 8px 10px 8px 8px; }
+    .group { border-radius: 8px; margin-bottom: 2px; }
+    .group:not(.collapsed) { background: var(--surface); margin: 4px 0 6px; }
+    .group-head { display: flex; align-items: center; gap: 8px; padding: 2px 8px 2px 2px; border-radius: 8px; }
+    .group.collapsed .group-head:hover { background: var(--hover); }
     .group-toggle {
-      flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0;
-      background: none; border: 0; padding: 2px; cursor: pointer; text-align: left; border-radius: 6px;
+      flex: 1; display: flex; align-items: center; gap: 8px; min-width: 0; height: 32px;
+      background: none; border: 0; padding: 0 4px; cursor: pointer; text-align: left; border-radius: 6px;
     }
-    .group-icon {
-      width: 24px; height: 24px; border-radius: 7px; display: grid; place-items: center;
-      background: var(--accent-soft); color: var(--accent);
-    }
-    .group-name { font-weight: 600; }
-    .count { margin-left: auto; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
-    .chev { color: var(--muted); transition: transform .15s ease; }
+    .group-icon { width: 20px; height: 20px; display: grid; place-items: center; color: var(--muted); }
+    .group-name { font-weight: 500; }
+    .count { margin-left: auto; font-size: 11px; color: var(--faint); font-variant-numeric: tabular-nums; }
+    .group:not(.collapsed) .count { color: var(--accent-fg); }
+    .chev { display: grid; color: var(--faint); transition: transform .12s ease; }
     .group.collapsed .chev { transform: rotate(-90deg); }
     .group.collapsed .items { display: none; }
 
-    .items { border-top: 1px solid var(--line); padding: 4px; }
+    .items { padding: 0 4px 4px; }
     .item {
-      display: flex; align-items: center; gap: 10px; padding: 6px 8px 6px 10px;
-      border-radius: 6px; cursor: pointer; user-select: none;
+      display: flex; align-items: center; gap: 10px; height: 30px; padding: 0 6px 0 32px;
+      border-radius: 6px; cursor: pointer; user-select: none; color: var(--muted);
     }
-    .item:hover { background: var(--surface-hover); }
-    .item span { flex: 1; min-width: 0; }
+    .item:hover { background: var(--hover); color: var(--fg); }
+    .item span { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* picked */
-    .picked .items { display: flex; flex-direction: column; gap: 2px; }
-    .chip { display: flex; align-items: center; gap: 6px; padding: 5px 6px 5px 10px; border-radius: 6px; }
-    .chip:hover { background: var(--surface-hover); }
+    .chip { display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 2px 4px 2px 32px; border-radius: 6px; }
+    .chip:hover { background: var(--hover); }
     .chip code { flex: 1; min-width: 0; font: 11px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; color: var(--muted); overflow-wrap: anywhere; }
     .icon-btn {
-      width: 24px; height: 24px; display: grid; place-items: center; flex: none;
-      border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer;
+      width: 22px; height: 22px; display: grid; place-items: center; flex: none;
+      border: 0; border-radius: 5px; background: none; color: var(--faint); cursor: pointer;
     }
-    .icon-btn:hover { background: var(--line); color: var(--fg); }
-    .empty { padding: 8px 10px 10px; color: var(--muted); font-size: 12px; }
-    .no-match { padding: 24px 0; text-align: center; color: var(--muted); }
+    .icon-btn:hover { background: var(--surface-hover); color: var(--fg); }
+    .empty { padding: 4px 8px 8px 32px; color: var(--faint); font-size: 12px; }
+    .no-match { padding: 24px 0; text-align: center; color: var(--faint); }
 
     /* footer */
-    footer { display: flex; gap: 8px; padding: 12px 16px 14px; border-top: 1px solid var(--line); }
+    footer { display: flex; gap: 8px; padding: 10px 14px 12px; border-top: 1px solid var(--line-soft); }
     .btn {
-      height: 34px; padding: 0 14px; border-radius: 8px; cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-      border: 1px solid var(--line); background: var(--bg); font-weight: 500;
-      transition: background .15s ease, border-color .15s ease, color .15s ease;
+      height: 28px; padding: 0 12px; border-radius: 6px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+      border: 1px solid var(--line); background: none; font-size: 12px; font-weight: 500;
+      transition: background .12s ease, border-color .12s ease, color .12s ease;
     }
-    .btn:hover { background: var(--surface-hover); }
-    .btn.primary {
-      flex: 1; border: 0; color: #fff;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 4px 14px rgba(123, 104, 238, .35);
-    }
-    .btn.primary:hover { filter: brightness(1.07); }
+    .btn:hover { background: var(--hover); }
+    .btn.primary { flex: 1; border-color: transparent; background: var(--accent); color: #fff; }
+    .btn.primary:hover { background: var(--accent-hover); }
     .btn.confirm { border-color: var(--danger); color: var(--danger); }
 
-    #msg { margin: -4px 16px 12px; padding: 8px 10px; border-radius: 8px; font-size: 12px; color: var(--danger); background: rgba(229, 72, 77, .1); }
+    #msg { margin: 0 14px 10px; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent); }
     #msg:empty { display: none; }
   </style>
 </head>
@@ -149,12 +152,12 @@
       <b>Declutter for ClickUp</b>
       <span id="summary">&nbsp;</span>
     </div>
-    <input type="checkbox" class="switch lg" id="master" title="Turn everything on or off" aria-label="Enabled">
+    <input type="checkbox" class="switch" id="master" title="Turn everything on or off" aria-label="Enabled">
   </header>
 
   <div class="search">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="filter" type="search" placeholder="Filter items" autocomplete="off">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="filter" type="search" placeholder="Search items" autocomplete="off">
   </div>
 
   <main id="list"></main>
@@ -162,7 +165,7 @@
 
   <footer>
     <button id="pick" class="btn primary">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
       Pick element
     </button>
     <button id="reset" class="btn" title="Restore default settings">Reset</button>

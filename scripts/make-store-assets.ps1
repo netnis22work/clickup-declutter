@@ -19,9 +19,9 @@ New-Item -ItemType Directory -Force $store, $icons | Out-Null
 
 # Non-ASCII via char codes: Windows PowerShell 5.1 reads BOM-less scripts as ANSI.
 $dot = " $([char]0x00B7) "
-$purple = [System.Drawing.Color]::FromArgb(123, 104, 238)
-$pink = [System.Drawing.Color]::FromArgb(196, 76, 220)
-$ink = [System.Drawing.Color]::FromArgb(22, 21, 29)
+# ClickUp design tokens: theme violet and the dark-theme main background.
+$purple = [System.Drawing.Color]::FromArgb(99, 71, 234)
+$ink = [System.Drawing.Color]::FromArgb(17, 17, 17)
 
 function New-Canvas($w, $h) {
   $b = New-Object System.Drawing.Bitmap $w, $h
@@ -44,8 +44,9 @@ function RoundRect($x, $y, $w, $h, $r) {
   return $p
 }
 
+# Flat accent fill (no gradients, matching ClickUp's flat UI). Args kept for call sites.
 function Grad($x, $y, $w, $h) {
-  New-Object System.Drawing.Drawing2D.LinearGradientBrush (New-Object System.Drawing.RectangleF $x, $y, $w, $h), $purple, $pink, 45
+  New-Object System.Drawing.SolidBrush $purple
 }
 
 # Icon art: rounded gradient square with three "list" bars, the last one swept away.
@@ -159,8 +160,7 @@ $g.Dispose(); $b.Dispose()
 
 # Small promo tile 440x280
 $b, $g = New-Canvas 440 280
-$g.FillRectangle((Grad 0 0 440 280), 0, 0, 440, 280)
-$g.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(40, 0, 0, 0))), 0, 0, 440, 280)
+$g.Clear($ink)
 Draw-IconArt $g 40 64 72
 $g.DrawString('Declutter', (New-Object System.Drawing.Font 'Segoe UI Semibold', 30), $white, 130, 58)
 $g.DrawString('for ClickUp', (New-Object System.Drawing.Font 'Segoe UI', 20), $white, 133, 104)
@@ -170,8 +170,7 @@ $g.Dispose(); $b.Dispose()
 
 # Marquee 1400x560
 $b, $g = New-Canvas 1400 560
-$g.FillRectangle((Grad 0 0 1400 560), 0, 0, 1400, 560)
-$g.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(70, 0, 0, 0))), 0, 0, 1400, 560)
+$g.Clear($ink)
 Draw-IconArt $g 80 120 88
 $g.DrawString('Declutter for ClickUp', (New-Object System.Drawing.Font 'Segoe UI Semibold', 40), $white, 74, 222)
 $g.DrawString("Hide the AI, chat, popups and upgrade`nnags. Keep your tasks.", (New-Object System.Drawing.Font 'Segoe UI', 22), $white, 80, 300)

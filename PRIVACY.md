@@ -9,6 +9,7 @@ The extension **does not collect, transmit, sell, or share any personal or usage
 
 ## What the extension accesses
 - **ClickUp pages (`https://app.clickup.com/*`).** The extension injects CSS and a small script that hides interface elements. It reads the page structure (element tags, classes, attributes and short labels) only to decide what to hide. It does not read, store, or send your tasks, comments, documents, names, or any other workspace content.
+- **ClickUp's theme colors.** So the popup matches ClickUp, the extension copies ClickUp's current interface color values (for example its background and theme color, such as `#6347ea`) into `chrome.storage.local` on your device. These are design values only, not workspace content, and they never leave your browser.
 - **Your settings.** Your on/off choices and any elements you hid with "Pick element" are saved with `chrome.storage.sync`. Chrome keeps this in your browser profile and, if you have Chrome Sync turned on, syncs it to your Google account under Google's own privacy policy. The developer never receives this data.
 
 ## What the extension does not do

@@ -58,7 +58,35 @@
     }
   }
 
+  // The popup mirrors ClickUp's own look: copy the current design tokens (light/dark
+  // surfaces and the workspace theme color) to local storage whenever they change.
+  const TOKENS = [
+    'background-main', 'background-main-hover', 'background-subtle', 'background-on-subtle',
+    'border-default', 'border-low-contrast', 'border-high-contrast',
+    'content-primary', 'content-secondary', 'content-tertiary', 'content-placeholder',
+    'background-theme', 'background-theme-hover', 'content-theme', 'background-danger',
+  ];
+  let lastTheme = '';
+  let lastThemeCheck = 0;
+  function captureTheme() {
+    const now = Date.now();
+    if (!document.body || now - lastThemeCheck < 2000) return;
+    lastThemeCheck = now;
+    const s = getComputedStyle(document.body);
+    const theme = {};
+    for (const t of TOKENS) {
+      const v = s.getPropertyValue(`--cu-${t}`).trim();
+      if (v) theme[t] = v;
+    }
+    if (!theme['background-theme']) return;
+    const json = JSON.stringify(theme);
+    if (json === lastTheme) return;
+    lastTheme = json;
+    chrome.storage.local.set({ cudTheme: theme });
+  }
+
   function sweep() {
+    captureTheme();
     document.querySelectorAll(`.${HIDDEN}`).forEach((e) => e.classList.remove(HIDDEN));
     for (const r of active()) {
       if (r.section) hideSection(r.section);

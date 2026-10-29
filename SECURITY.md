@@ -23,6 +23,7 @@ The extension is deliberately small so it's easy to audit:
 | Remote code | None. No CDN scripts, no `eval`, no `new Function`. Everything runs from the packaged files. |
 | Page interaction | Content scripts run in Chrome's isolated world. They only add CSS and toggle a class that hides elements, and they never read or change workspace data. |
 | Custom selectors | Selectors saved with "Pick element" are only used inside CSS `display:none` rules. They're validated before use, and a bad selector is skipped. |
+| Theme colors | ClickUp color tokens copied into `storage.local` are only applied to the popup after `CSS.supports('color', value)` accepts them, so nothing but a valid color reaches its styles. |
 | Messages | The content script accepts one message (`cud-pick`) from its own popup. It ignores messages from web pages. |
 | Dependencies | None. No npm packages and no build step. |
 

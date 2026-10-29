@@ -75,7 +75,7 @@ Declutter for ClickUp has a single purpose: hiding unwanted interface elements (
 
 **Permission justification: storage**
 ```
-Saves the user's settings: which hide rules are on or off, and the CSS selectors of elements the user chose to hide with "Pick element". Nothing else is stored.
+Saves the user's settings (which hide rules are on or off, and the CSS selectors of elements the user chose to hide with "Pick element"), plus a local copy of ClickUp's current interface colors so the popup matches the user's ClickUp theme. Nothing else is stored, and nothing leaves the browser.
 ```
 
 **Permission justification: host permission (https://app.clickup.com/*)**

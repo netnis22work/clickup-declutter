@@ -136,4 +136,32 @@ $('pick').onclick = async () => {
   }
 };
 
+// Apply ClickUp's live design tokens (captured by content.js) so the popup matches
+// the user's light/dark mode and workspace theme color.
+const TOKEN_VARS = {
+  'background-main': '--bg', 'background-main-hover': '--hover', 'background-subtle': '--surface',
+  'background-on-subtle': '--surface-hover', 'border-default': '--line', 'border-low-contrast': '--line-soft',
+  'border-high-contrast': '--track', 'content-primary': '--fg', 'content-secondary': '--muted',
+  'content-tertiary': '--faint', 'content-placeholder': '--placeholder', 'background-theme': '--accent',
+  'background-theme-hover': '--accent-hover', 'content-theme': '--accent-fg', 'background-danger': '--danger',
+};
+function applyTheme(theme) {
+  if (!theme) return;
+  const root = document.documentElement;
+  for (const [token, cssVar] of Object.entries(TOKEN_VARS)) {
+    const v = theme[token];
+    if (v && CSS.supports('color', v)) root.style.setProperty(cssVar, v);
+  }
+  root.dataset.cu = '';
+  // Native form controls and scrollbars follow the page brightness. Resolve the color
+  // through the CSS engine so hex, rgb() and hsl() all come back as rgb().
+  const probe = document.createElement('i');
+  probe.style.color = getComputedStyle(root).getPropertyValue('--bg');
+  document.body.append(probe);
+  const [r, g, b] = (getComputedStyle(probe).color.match(/[\d.]+/g) || []).map(Number);
+  probe.remove();
+  if (r !== undefined) root.style.colorScheme = (r + g + b) / 3 > 128 ? 'light' : 'dark';
+}
+
+chrome.storage.local.get('cudTheme', ({ cudTheme }) => applyTheme(cudTheme));
 chrome.storage.sync.get('cud', ({ cud }) => { if (cud) state = { ...state, ...cud }; render(); });
