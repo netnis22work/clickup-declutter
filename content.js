@@ -7,6 +7,22 @@
   const active = () => (state.off ? [] : CUD_RULES.filter(isOn));
   const activeCustom = () => (state.off ? [] : state.custom);
 
+  // When the extension is reloaded or updated, a script already running in an open tab
+  // (or injected into a tab that was mid-load) loses its chrome.* APIs: chrome.storage
+  // becomes undefined and calls throw. Every chrome.* call goes through these, so such a
+  // script goes quiet instead; the CSS it already applied keeps working until reload.
+  const alive = () => { try { return !!(chrome.runtime && chrome.runtime.id && chrome.storage); } catch { return false; } };
+  const store = {
+    get(area, key, cb) {
+      if (!alive()) return;
+      try { chrome.storage[area].get(key, (v) => { if (alive()) cb(v || {}); }); } catch {}
+    },
+    set(area, value) {
+      if (!alive()) return;
+      try { chrome.storage[area].set(value).catch(() => {}); } catch {}
+    },
+  };
+
   // ---------- CSS layer ----------
   // Everything that can be CSS is CSS, injected before ClickUp renders, so hidden items
   // never paint, even for a frame.
@@ -137,7 +153,7 @@
     const json = JSON.stringify(theme);
     if (json === lastTheme) return;
     lastTheme = json;
-    chrome.storage.local.set({ cudTheme: theme });
+    store.set('local', { cudTheme: theme });
   }
 
   // ---------- Rule health ----------
@@ -145,7 +161,7 @@
   // (per scope). The popup flags rules that found nothing over the last few days of use.
   let health = null;
   let lastHealthCheck = 0;
-  chrome.storage.local.get('cudHealth', ({ cudHealth }) => { health = { days: {}, seen: {}, ...cudHealth }; });
+  store.get('local', 'cudHealth', ({ cudHealth }) => { health = { days: {}, seen: {}, ...cudHealth }; });
 
   const isTaskPage = () => !!document.querySelector('cu-task-view-section-header, [data-test^="task-view"]');
   function present(r) {
@@ -180,7 +196,7 @@
         changed = true;
       }
     }
-    if (changed) chrome.storage.local.set({ cudHealth: health });
+    if (changed) store.set('local', { cudHealth: health });
   }
 
   // ---------- Sweep ----------
@@ -215,14 +231,16 @@
   // then the real settings once storage answers.
   style.textContent = cached ? cached.css : buildCss();
   filterPlaceholders(cached ? cached.ph : placeholderIds());
-  chrome.storage.sync.get('cud', ({ cud }) => { state = cudState(cud); apply(); });
-  chrome.storage.onChanged.addListener((ch, area) => {
-    if (area !== 'sync' || !ch.cud) return;
-    const wasOff = state.off;
-    state = cudState(ch.cud.newValue);
-    apply();
-    if (state.off !== wasOff) toast(state.off ? 'Declutter paused: showing everything' : 'Declutter on');
-  });
+  store.get('sync', 'cud', ({ cud }) => { state = cudState(cud); apply(); });
+  if (alive()) {
+    chrome.storage.onChanged.addListener((ch, area) => {
+      if (area !== 'sync' || !ch.cud) return;
+      const wasOff = state.off;
+      state = cudState(ch.cud.newValue);
+      apply();
+      if (state.off !== wasOff) toast(state.off ? 'Declutter paused: showing everything' : 'Declutter on');
+    });
+  }
 
   // ---------- Toast ----------
   let toastTimer;
@@ -297,10 +315,10 @@
       document.removeEventListener('click', onClick, true);
       document.removeEventListener('keydown', onKey, true);
     };
-    const update = (fn) => chrome.storage.sync.get('cud', ({ cud }) => {
+    const update = (fn) => store.get('sync', 'cud', ({ cud }) => {
       const next = cudState(cud);
       fn(next);
-      chrome.storage.sync.set({ cud: next });
+      store.set('sync', { cud: next });
     });
     const commit = () => {
       if (!target) return stop();
@@ -326,5 +344,5 @@
     document.addEventListener('keydown', onKey, true);
   }
 
-  chrome.runtime.onMessage.addListener((msg) => { if (msg === 'cud-pick') startPicker(); });
+  if (alive()) chrome.runtime.onMessage.addListener((msg) => { if (msg === 'cud-pick') startPicker(); });
 })();
