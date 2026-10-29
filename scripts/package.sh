@@ -7,7 +7,7 @@ cd "$(dirname "$0")/.."
 version=$(grep -m1 '"version"' manifest.json | sed -E 's/.*"version": *"([^"]+)".*/\1/')
 out="dist/declutter-for-clickup-${version}.zip"
 
-files=(manifest.json rules.js content.js content.css popup.html popup.js LICENSE icons/*.png)
+files=(manifest.json rules.js content.js background.js content.css popup.html popup.js LICENSE icons/*.png)
 
 mkdir -p dist
 rm -f "$out"

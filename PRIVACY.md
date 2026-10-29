@@ -8,9 +8,12 @@ Declutter for ClickUp ("the extension") hides parts of the ClickUp web app's int
 The extension **does not collect, transmit, sell, or share any personal or usage data.** It has no servers, no analytics, no tracking, and no third-party code.
 
 ## What the extension accesses
-- **ClickUp pages (`https://app.clickup.com/*`).** The extension injects CSS and a small script that hides interface elements. It reads the page structure (element tags, classes, attributes and short labels) only to decide what to hide. It does not read, store, or send your tasks, comments, documents, names, or any other workspace content.
+- **ClickUp pages (`https://app.clickup.com/*`).** The extension injects CSS and a small script that hides interface elements. It reads the page structure (element tags, classes, attributes and short labels) only to decide what to hide. It does not collect or send your tasks, comments, documents, names, or any other workspace content.
 - **ClickUp's theme colors.** So the popup matches ClickUp, the extension copies ClickUp's current interface color values (for example its background and theme color, such as `#6347ea`) into `chrome.storage.local` on your device. These are design values only, not workspace content, and they never leave your browser.
-- **Your settings.** Your on/off choices and any elements you hid with "Pick element" are saved with `chrome.storage.sync`. Chrome keeps this in your browser profile and, if you have Chrome Sync turned on, syncs it to your Google account under Google's own privacy policy. The developer never receives this data.
+- **Rule health.** To notice when a ClickUp update breaks a rule, the extension stores, in `chrome.storage.local`, the last date each rule found its element and the dates you used ClickUp (the last 14 at most). That's dates and rule names only, kept on your device.
+- **Your settings.** Your on/off choices and any elements you hid with "Pick element" are saved with `chrome.storage.sync`. A picked element's default name is its visible label (for example a button's text), which you can rename. Chrome keeps this in your browser profile and, if you have Chrome Sync turned on, syncs it to your Google account under Google's own privacy policy. The developer never receives this data.
+- **Sharing.** "Copy" and "Save file" in Settings put your settings into your clipboard or a file only when you click them. What you do with that text is up to you.
+- **Report links.** "Report" in Settings opens a GitHub "new issue" page prefilled with the rule's name and the extension version. Nothing is sent unless you submit that issue yourself.
 
 ## What the extension does not do
 - No network requests of any kind.

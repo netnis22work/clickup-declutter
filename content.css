@@ -5,6 +5,36 @@
   cursor: crosshair !important;
 }
 
+/* Uses ClickUp's own tokens so it blends in, with fallbacks. */
+#cud-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+  min-height: 36px;
+  border-radius: 8px;
+  background: var(--cu-background-main-inverse, #eeeeee);
+  color: var(--cu-content-inverse, #111111);
+  font: 500 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", sans-serif;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+#cud-toast:not(:has(button)) { padding-right: 14px; }
+#cud-toast button {
+  border: 0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  background: var(--cu-background-theme, #6347ea);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 #cud-picker {
   position: fixed;
   left: 50%;

@@ -26,7 +26,7 @@ jobs:
       - name: Validate JSON and JS syntax
         run: |
           jq empty manifest.json
-          for f in rules.js content.js popup.js; do node --check "$f"; done
+          for f in rules.js content.js background.js popup.js; do node --check "$f"; done
 
       - name: Build zip
         run: bash scripts/package.sh

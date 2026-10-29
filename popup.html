@@ -22,6 +22,7 @@
       --accent-hover: #5c47cd;
       --accent-fg: #a89fff;
       --danger: #e5484d;
+      --warn: #ffb224;
       color-scheme: dark;
     }
     @media (prefers-color-scheme: light) {
@@ -119,7 +120,7 @@
     /* picked */
     .chip { display: flex; align-items: center; gap: 6px; min-height: 30px; padding: 2px 4px 2px 32px; border-radius: 6px; }
     .chip:hover { background: var(--hover); }
-    .chip code { flex: 1; min-width: 0; font: 11px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; color: var(--muted); overflow-wrap: anywhere; }
+    .chip code { display: block; font: 10.5px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; color: var(--faint); overflow-wrap: anywhere; }
     .icon-btn {
       width: 22px; height: 22px; display: grid; place-items: center; flex: none;
       border: 0; border-radius: 5px; background: none; color: var(--faint); cursor: pointer;
@@ -141,35 +142,133 @@
     .btn.primary:hover { background: var(--accent-hover); }
     .btn.confirm { border-color: var(--danger); color: var(--danger); }
 
+    /* header icon button (gear / back) */
+    .head-btn {
+      position: relative; width: 26px; height: 26px; display: grid; place-items: center; flex: none;
+      border: 0; border-radius: 6px; background: none; color: var(--muted); cursor: pointer;
+    }
+    .head-btn:hover { background: var(--hover); color: var(--fg); }
+    .dot { position: absolute; top: 4px; right: 4px; width: 7px; height: 7px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 0 2px var(--bg); }
+    .dot[hidden] { display: none; }
+    .item .warn { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); flex: none; }
+
+    /* views */
+    [hidden] { display: none !important; }
+    #view-settings { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+    .settings { flex: 1; overflow-y: auto; padding: 4px 14px 14px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+    .settings h3 { margin: 14px 0 6px; font-size: 11px; font-weight: 600; color: var(--faint); text-transform: uppercase; letter-spacing: .04em; }
+    .settings h3:first-child { margin-top: 8px; }
+    .hint { margin: 0 0 8px; font-size: 12px; color: var(--faint); }
+    .card { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+    .row { display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 6px 10px; }
+    .row + .row { border-top: 1px solid var(--line-soft); }
+    .row .grow { flex: 1; min-width: 0; }
+    .row .sub { display: block; font-size: 11px; color: var(--faint); }
+    button.row { width: 100%; border: 0; background: none; text-align: left; cursor: pointer; }
+    button.row:hover { background: var(--hover); }
+    .check { color: var(--accent); visibility: hidden; }
+    .row.current .check { visibility: visible; }
+    .btn-row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .btn-row .btn { flex: 1; }
+    .link { border: 0; background: none; padding: 0; color: var(--accent-fg); cursor: pointer; font-size: 12px; }
+    .link:hover { text-decoration: underline; }
+    textarea {
+      width: 100%; height: 90px; margin-top: 8px; padding: 8px; resize: vertical; border-radius: 6px;
+      border: 1px solid var(--line); background: var(--bg); color: var(--fg);
+      font: 11px/1.4 ui-monospace, "Cascadia Code", Consolas, monospace; outline: none;
+    }
+    textarea:focus { border-color: var(--accent); }
+    kbd { padding: 2px 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; font: 11px ui-monospace, Consolas, monospace; color: var(--fg); background: var(--surface); }
+    .ok { color: var(--muted); font-size: 12px; }
+    .note { margin-top: 8px; font-size: 12px; color: var(--muted); }
+    .note.error { color: var(--danger); }
+    .chip-name { flex: 1; min-width: 0; }
+    .chip-name b { display: block; font-weight: 400; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: text; }
+    .chip-name input { width: 100%; height: 22px; padding: 0 6px; border: 1px solid var(--accent); border-radius: 5px; background: var(--bg); color: var(--fg); font: inherit; outline: none; }
+
     #msg { margin: 0 14px 10px; padding: 6px 10px; border-radius: 6px; font-size: 12px; color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent); }
     #msg:empty { display: none; }
   </style>
 </head>
 <body>
-  <header>
-    <img src="icons/48.png" alt="">
-    <div class="title">
-      <b>Declutter for ClickUp</b>
-      <span id="summary">&nbsp;</span>
-    </div>
-    <input type="checkbox" class="switch" id="master" title="Turn everything on or off" aria-label="Enabled">
-  </header>
+  <div id="view-main" style="display:contents">
+    <header>
+      <img src="icons/48.png" alt="">
+      <div class="title">
+        <b>Declutter for ClickUp</b>
+        <span id="summary">&nbsp;</span>
+      </div>
+      <button id="open-settings" class="head-btn" title="Settings" aria-label="Settings">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        <span class="dot" id="health-dot" hidden></span>
+      </button>
+      <input type="checkbox" class="switch" id="master" title="Turn everything on or off (Alt+Shift+D)" aria-label="Enabled">
+    </header>
 
-  <div class="search">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="filter" type="search" placeholder="Search items" autocomplete="off">
+    <div class="search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="filter" type="search" placeholder="Search items" autocomplete="off">
+    </div>
+
+    <main id="list"></main>
+    <div id="msg"></div>
+
+    <footer>
+      <button id="pick" class="btn primary">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+        Pick element
+      </button>
+    </footer>
   </div>
 
-  <main id="list"></main>
-  <div id="msg"></div>
+  <div id="view-settings" hidden>
+    <header>
+      <button id="close-settings" class="head-btn" title="Back" aria-label="Back">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <div class="title"><b>Settings</b></div>
+    </header>
+    <div class="settings">
+      <h3>Presets</h3>
+      <div class="card" id="presets"></div>
 
-  <footer>
-    <button id="pick" class="btn primary">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="7"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
-      Pick element
-    </button>
-    <button id="reset" class="btn" title="Restore default settings">Reset</button>
-  </footer>
+      <h3>Rule health</h3>
+      <div id="health"></div>
+
+      <h3>Share settings</h3>
+      <p class="hint">Copy your setup and paste it on a teammate's browser. Nothing is uploaded.</p>
+      <div class="btn-row">
+        <button class="btn" id="copy">Copy</button>
+        <button class="btn" id="save-file">Save file</button>
+        <button class="btn" id="show-import">Import</button>
+      </div>
+      <div id="import-box" hidden>
+        <textarea id="import-text" placeholder="Paste settings here" spellcheck="false"></textarea>
+        <div class="btn-row" style="margin-top:6px">
+          <button class="btn primary" id="apply-import">Apply</button>
+          <button class="btn" id="load-file">Load file</button>
+        </div>
+        <input type="file" id="file-input" accept=".json,application/json" hidden>
+      </div>
+      <div class="note" id="share-note"></div>
+
+      <h3>Keyboard shortcut</h3>
+      <div class="card"><div class="row">
+        <span class="grow">Turn on or off</span>
+        <span id="shortcut"></span>
+        <button class="link" id="change-shortcut">Change</button>
+      </div></div>
+
+      <h3>Reset</h3>
+      <div class="card"><div class="row">
+        <span class="grow">Restore defaults<span class="sub">Turns every rule back to default and removes picked elements.</span></span>
+        <button id="reset" class="btn">Reset</button>
+      </div></div>
+
+      <h3>About</h3>
+      <p class="hint" id="about"></p>
+    </div>
+  </div>
 
   <script src="rules.js"></script>
   <script src="popup.js"></script>

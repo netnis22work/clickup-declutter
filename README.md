@@ -19,18 +19,27 @@ A Chrome extension that hides ClickUp's AI entry points, Chat/Channels/DMs, "Wha
 4. Reload your ClickUp tab.
 
 ## Use
-- Click the toolbar icon to toggle items by group. Changes apply instantly.
-- **Pick element**: hover over anything, use ↑/↓ to select the parent or child, then click or press Enter to hide it. Esc cancels. Picked items appear in the popup, and × brings one back.
-- Uncheck **On** to see vanilla ClickUp again.
+- Click the toolbar icon to toggle items by group. Changes apply instantly. The badge shows how many rules are active on the current ClickUp tab.
+- **Pick element**: hover over anything, use ↑/↓ to select the parent or child, then click or press Enter to hide it. Esc cancels. A "Hidden · Undo" toast lets you take it back. Picked items get a readable name (click it to rename), and × brings one back.
+- **Alt+Shift+D** turns Declutter on or off, which is handy when someone asks "where's button X?". You can change the shortcut in Settings.
+- The popup follows your ClickUp look: light or dark mode and your workspace theme color.
+
+**Settings (gear icon):**
+- **Presets:** Recommended, Focus (also hides Docs, Dashboards, Goals and Timesheets), and Light touch (only popups and nags).
+- **Rule health:** if a ClickUp update breaks a rule, the gear gets a dot and the rule is listed with **Report** (opens a prefilled GitHub issue) and **Ignore**.
+- **Share settings:** Copy, Save file and Import let a team use the same setup. Nothing is uploaded.
+- **Reset** back to defaults.
 
 | | |
 | --- | --- |
 | ![After](store/screenshot-2-after.png) | ![Popup](store/screenshot-4-popup.png) |
+| ![Settings](store/screenshot-5-settings.png) | ![Before](store/screenshot-3-before.png) |
 
 ## What gets hidden
 | Group | Hidden by default | Optional |
 | --- | --- | --- |
-| AI | AI rail item, Brain² button, "New" AI row, Skills, Artifacts, AI Chats, AI automation buttons | AI shimmer text / at-location bar |
+| AI | AI rail item, Brain² button, AI icon in search, "New" AI row, Skills, Artifacts, AI Chats, AI automation buttons | AI shimmer text / at-location bar |
+| In tasks | "Ask Brain about this task" card, Ask Brain² in comments, AI editor-toolbar buttons, AI subtask suggestions, AI activity summary, AI entries in the `/` menu | |
 | Chat | Chat rail item, Channels, Direct Messages, Replies, Posts, "Add Channel" chip | |
 | Sidebar | Meetings | Inbox, Assigned Comments |
 | Left rail | Planner, Teams, Whiteboards, Forms, Clips, Install, Upgrade | Goals, Timesheets, Dashboards, Docs, Invite |
@@ -38,7 +47,7 @@ A Chrome extension that hides ClickUp's AI entry points, Chat/Channels/DMs, "Wha
 | Popups | "What's new" cards and tours, upgrade/automation banners, banner popups | |
 
 ## When ClickUp changes its UI
-Selectors live in [`rules.js`](rules.js), one line per item. If something comes back after a ClickUp release, fix that line (PRs welcome) or just re-pick it.
+Selectors live in [`rules.js`](rules.js), one line per item. The extension notices when a rule stops finding its element and flags it in Settings. Fix that line (PRs welcome) or just re-pick the element.
 
 ## Development
 - No build step. Edit the files, then click ↻ on the extension in `chrome://extensions`.

@@ -8,6 +8,13 @@
   "minimum_chrome_version": "105",
   "permissions": ["storage"],
   "host_permissions": ["https://app.clickup.com/*"],
+  "background": { "service_worker": "background.js" },
+  "commands": {
+    "toggle-declutter": {
+      "suggested_key": { "default": "Alt+Shift+D" },
+      "description": "Turn Declutter on or off"
+    }
+  },
   "content_scripts": [
     {
       "matches": ["https://app.clickup.com/*"],

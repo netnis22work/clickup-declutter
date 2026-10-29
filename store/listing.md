@@ -24,13 +24,21 @@ Declutter for ClickUp hides them so you can get back to your tasks.
 
 WHAT IT HIDES (each one can be toggled)
 • AI: the AI rail item, Brain² button, AI Chats, Skills, Artifacts and AI automation buttons
+• Inside tasks: "Ask Brain" cards, Ask Brain² in comments, AI editor buttons, AI subtask suggestions and AI entries in the / menu
 • Chat: the Chat rail item, Channels, Direct Messages, Replies, Posts and the "Add Channel" chip on list views
 • Left rail: Planner, Teams, Whiteboards, Forms, Clips, Install and Upgrade (Goals, Timesheets, Dashboards and Docs are optional)
 • Top bar: SyncUp call, record clip, talk to text and notepad buttons
 • Popups: "What's new" cards, product tours and upgrade banners
 
 PICK ANYTHING ELSE
-Click "Pick element", hover over anything in ClickUp and click it to hide it. Use the ↑/↓ arrow keys to select a bigger or smaller area. Picked items are listed in the popup, and you can bring any of them back with one click.
+Click "Pick element", hover over anything in ClickUp and click it to hide it. Use the ↑/↓ arrow keys to select a bigger or smaller area. Changed your mind? Click Undo. Picked items get readable names, and you can bring any of them back with one click.
+
+BUILT FOR TEAMS
+• Presets: Recommended, Focus or Light touch, in one click
+• Share your setup: copy it or save it to a file, and teammates import it. Nothing is uploaded.
+• Rule health: if a ClickUp update breaks a rule, Declutter tells you, and you can report it in one click
+• Alt+Shift+D flips between clean and normal ClickUp
+• Matches your ClickUp look: light or dark mode, plus your workspace theme color
 
 FAST AND INVISIBLE
 Rules are applied as CSS before the page renders, so hidden items never flash on screen. ClickUp itself keeps working normally: nothing is deleted or changed in your workspace, and turning the extension off brings everything back instantly.
@@ -55,6 +63,7 @@ Declutter for ClickUp is an independent project and is not affiliated with, endo
 | Screenshot 2 | `store/screenshot-2-after.png` | 1280×800 |
 | Screenshot 3 | `store/screenshot-3-before.png` | 1280×800 |
 | Screenshot 4 | `store/screenshot-4-popup.png` | 1280×800 |
+| Screenshot 5 | `store/screenshot-5-settings.png` | 1280×800 |
 | Small promo tile | `store/promo-small-440x280.png` | 440×280 |
 | Marquee promo tile | `store/promo-marquee-1400x560.png` | 1400×560 |
 
@@ -75,7 +84,7 @@ Declutter for ClickUp has a single purpose: hiding unwanted interface elements (
 
 **Permission justification: storage**
 ```
-Saves the user's settings (which hide rules are on or off, and the CSS selectors of elements the user chose to hide with "Pick element"), plus a local copy of ClickUp's current interface colors so the popup matches the user's ClickUp theme. Nothing else is stored, and nothing leaves the browser.
+Saves the user's settings (which hide rules are on or off, and the CSS selectors and names of elements the user chose to hide with "Pick element"). Also stores locally a copy of ClickUp's current interface colors, so the popup matches the user's ClickUp theme, and the last date each hide rule found its element, so the extension can warn when a ClickUp update breaks a rule. Nothing leaves the browser.
 ```
 
 **Permission justification: host permission (https://app.clickup.com/*)**

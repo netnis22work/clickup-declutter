@@ -7,6 +7,7 @@ param(
   [string]$Before,
   [string]$After,
   [string]$Popup,
+  [string]$Settings = '',
   [string]$Blur = ''
 )
 $ErrorActionPreference = 'Stop'
@@ -105,22 +106,27 @@ $afterImg = Load-Shot $After $null
 $beforeImg.Save((Join-Path $store 'screenshot-3-before.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 $afterImg.Save((Join-Path $store 'screenshot-2-after.png'), [System.Drawing.Imaging.ImageFormat]::Png)
 
-# Screenshot 4: popup panel over a dimmed After shot, anchored top-right like a real extension popup
-$panel = [System.Drawing.Image]::FromFile((Resolve-Path $Popup))
-$b, $g = New-Canvas 1280 800
-$g.DrawImage($afterImg, 0, 0, 1280, 800)
-$g.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(110, 0, 0, 0))), 0, 0, 1280, 800)
-$pw = [int]($panel.Width * 1.25); $ph = [int]($panel.Height * 1.25)
-$px = 1280 - $pw - 48; $py = 20
-for ($i = 1; $i -le 8; $i++) {
-  $g.FillPath((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(10, 0, 0, 0))), (RoundRect ($px - $i) ($py - $i + 6) ($pw + 2 * $i) ($ph + 2 * $i) (14 + $i)))
+# Screenshots 4 and 5: a popup panel over a dimmed After shot, anchored top-right like
+# a real extension popup.
+function Save-PopupShot($panelPath, $outName) {
+  $panel = [System.Drawing.Image]::FromFile((Resolve-Path $panelPath))
+  $b, $g = New-Canvas 1280 800
+  $g.DrawImage($afterImg, 0, 0, 1280, 800)
+  $g.FillRectangle((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(110, 0, 0, 0))), 0, 0, 1280, 800)
+  $pw = [int]($panel.Width * 1.25); $ph = [int]($panel.Height * 1.25)
+  $px = 1280 - $pw - 48; $py = 20
+  for ($i = 1; $i -le 8; $i++) {
+    $g.FillPath((New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(10, 0, 0, 0))), (RoundRect ($px - $i) ($py - $i + 6) ($pw + 2 * $i) ($ph + 2 * $i) (14 + $i)))
+  }
+  $g.SetClip((RoundRect $px $py $pw $ph 14))
+  $g.DrawImage($panel, $px, $py, $pw, $ph)
+  $g.ResetClip()
+  $g.DrawPath((New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(60, 255, 255, 255)), 1), (RoundRect $px $py $pw $ph 14))
+  $b.Save((Join-Path $store $outName), [System.Drawing.Imaging.ImageFormat]::Png)
+  $g.Dispose(); $b.Dispose(); $panel.Dispose()
 }
-$g.SetClip((RoundRect $px $py $pw $ph 14))
-$g.DrawImage($panel, $px, $py, $pw, $ph)
-$g.ResetClip()
-$g.DrawPath((New-Object System.Drawing.Pen ([System.Drawing.Color]::FromArgb(60, 255, 255, 255)), 1), (RoundRect $px $py $pw $ph 14))
-$b.Save((Join-Path $store 'screenshot-4-popup.png'), [System.Drawing.Imaging.ImageFormat]::Png)
-$g.Dispose(); $b.Dispose(); $panel.Dispose()
+Save-PopupShot $Popup 'screenshot-4-popup.png'
+if ($Settings) { Save-PopupShot $Settings 'screenshot-5-settings.png' }
 
 $white = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::White)
 $muted = New-Object System.Drawing.SolidBrush ([System.Drawing.Color]::FromArgb(185, 182, 205))

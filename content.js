@@ -1,10 +1,15 @@
 // Runs at document_start on app.clickup.com. rules.js is loaded first.
 (() => {
   const HIDDEN = 'cud-hidden';
-  let state = { off: false, enabled: {}, custom: [] };
+  let state = cudState();
 
   const isOn = (r) => (r.id in state.enabled ? state.enabled[r.id] : r.def);
   const active = () => (state.off ? [] : CUD_RULES.filter(isOn));
+  const activeCustom = () => (state.off ? [] : state.custom);
+
+  // Messaging the extension throws once the extension is reloaded or updated
+  // (this old content script stays on the page), so every call goes through here.
+  const send = (msg) => { try { chrome.runtime.sendMessage(msg).catch(() => {}); } catch {} };
 
   // ---------- CSS layer ----------
   const style = document.createElement('style');
@@ -21,17 +26,19 @@
       if (r.css) sels.push(r.css);
       if (r.row) sels.push(`cdk-tree-node:has([data-test="${r.row}"])`);
     }
-    if (!state.off) sels.push(...state.custom.filter(validSelector));
+    sels.push(...activeCustom().map((c) => c.sel).filter(validSelector));
     sels.push(`.${HIDDEN}`);
     // One rule per selector so a single bad selector can't break the rest.
     style.textContent = sels.map((s) => `${s}{display:none!important}`).join('\n');
   }
 
   // ---------- JS layer (things CSS can't express) ----------
+  const sectionButton = (name) => document.querySelector(`cu-home-sidebar [data-test-section-name="${CSS.escape(name)}"]`);
+
   // Home sidebar is a flat cdk virtual tree: a section's children are the following
   // sibling nodes with aria-level > 1, so hide the header and walk forward.
   function hideSection(name) {
-    const btn = document.querySelector(`cu-home-sidebar [data-test-section-name="${CSS.escape(name)}"]`);
+    const btn = sectionButton(name);
     const node = btn && btn.closest('cdk-tree-node');
     if (!node) return;
     const prev = node.previousElementSibling;
@@ -47,7 +54,7 @@
   function hideTourCards() {
     const roots = [...document.body.children, ...document.querySelectorAll('.cdk-overlay-container > *')];
     for (const el of roots) {
-      if (el.id === 'cud-picker' || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
+      if (el.id === 'cud-picker' || el.id === 'cud-toast' || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') continue;
       // Skip the app root and other big containers: cards are small, and reading
       // text from the whole app on every mutation would be expensive.
       const box = el.getBoundingClientRect();
@@ -58,6 +65,17 @@
     }
   }
 
+  // The "/" command menu only exists while it's open; hide its AI / Brain entries.
+  function hideSlashAi() {
+    document.querySelectorAll('cu-slash-command, .cu-slash-command__container, cu-command-menu').forEach((menu) => {
+      menu.querySelectorAll('[role="option"], [role="menuitem"], li, [class*="__item"]').forEach((item) => {
+        const text = item.textContent || '';
+        if (text.length < 80 && /\b(AI|Brain)\b/.test(text)) item.classList.add(HIDDEN);
+      });
+    });
+  }
+
+  // ---------- Theme capture ----------
   // The popup mirrors ClickUp's own look: copy the current design tokens (light/dark
   // surfaces and the workspace theme color) to local storage whenever they change.
   const TOKENS = [
@@ -85,13 +103,64 @@
     chrome.storage.local.set({ cudTheme: theme });
   }
 
+  // ---------- Rule health + badge ----------
+  // Records the last day each rule found its element, and which days ClickUp was used
+  // (per scope). The popup flags rules that found nothing over the last few days of use.
+  // Also reports how many rules matched on this page for the toolbar badge.
+  let health = null;
+  let lastHealthCheck = 0;
+  let lastCount = -1;
+  chrome.storage.local.get('cudHealth', ({ cudHealth }) => { health = { days: {}, seen: {}, ...cudHealth }; });
+
+  const isTaskPage = () => !!document.querySelector('cu-task-view-section-header, [data-test^="task-view"]');
+  function present(r) {
+    try {
+      if (r.css && document.querySelector(r.css)) return true;
+      if (r.row && document.querySelector(`[data-test="${r.row}"]`)) return true;
+      if (r.section && sectionButton(r.section)) return true;
+    } catch {}
+    return false;
+  }
+
+  function checkHealth() {
+    const now = Date.now();
+    if (!health || !document.body || now - lastHealthCheck < 5000) return;
+    lastHealthCheck = now;
+    // Local date, not UTC, so "a day of use" matches the user's day.
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    let changed = false;
+    let count = 0;
+    const mark = (id) => {
+      count++;
+      if (health.seen[id] !== today) { health.seen[id] = today; changed = true; }
+    };
+    for (const r of active()) if (present(r)) mark(r.id);
+    for (const c of activeCustom()) {
+      try { if (document.querySelector(c.sel)) mark(`c:${c.sel}`); } catch {}
+    }
+    for (const scope of isTaskPage() ? ['app', 'task'] : ['app']) {
+      const days = health.days[scope] || (health.days[scope] = []);
+      if (days[days.length - 1] !== today) {
+        days.push(today);
+        if (days.length > 14) days.shift();
+        changed = true;
+      }
+    }
+    if (changed) chrome.storage.local.set({ cudHealth: health });
+    if (count !== lastCount) { lastCount = count; send({ type: 'cud-count', count }); }
+  }
+
+  // ---------- Sweep ----------
   function sweep() {
     captureTheme();
     document.querySelectorAll(`.${HIDDEN}`).forEach((e) => e.classList.remove(HIDDEN));
     for (const r of active()) {
       if (r.section) hideSection(r.section);
       if (r.js === 'tourCards' && document.body) hideTourCards();
+      if (r.js === 'slashAi') hideSlashAi();
     }
+    checkHealth();
   }
 
   let queued = false;
@@ -102,14 +171,38 @@
   };
   new MutationObserver(schedule).observe(document.documentElement, { childList: true, subtree: true });
 
-  function apply() { buildCss(); sweep(); }
+  function apply() { buildCss(); lastHealthCheck = 0; sweep(); }
 
   // Defaults immediately (no flash), then real settings once storage answers.
   apply();
-  chrome.storage.sync.get('cud', ({ cud }) => { if (cud) state = { ...state, ...cud }; apply(); });
-  chrome.storage.onChanged.addListener((ch) => {
-    if (ch.cud) { state = { off: false, enabled: {}, custom: [], ...ch.cud.newValue }; apply(); }
+  chrome.storage.sync.get('cud', ({ cud }) => { state = cudState(cud); apply(); });
+  chrome.storage.onChanged.addListener((ch, area) => {
+    if (area !== 'sync' || !ch.cud) return;
+    const wasOff = state.off;
+    state = cudState(ch.cud.newValue);
+    apply();
+    if (state.off !== wasOff) toast(state.off ? 'Declutter paused: showing everything' : 'Declutter on');
   });
+
+  // ---------- Toast ----------
+  let toastTimer;
+  function toast(text, action) {
+    if (!document.body) return;
+    let el = document.getElementById('cud-toast');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'cud-toast';
+      document.body.appendChild(el);
+    }
+    el.replaceChildren(Object.assign(document.createElement('span'), { textContent: text }));
+    if (action) {
+      const btn = Object.assign(document.createElement('button'), { textContent: action.label });
+      btn.onclick = () => { action.run(); el.remove(); };
+      el.append(btn);
+    }
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.remove(), action ? 6000 : 2500);
+  }
 
   // ---------- Element picker ----------
   const UNSTABLE = /^(ng-|cdk-|_ng)|active|hover|focus|selected|open|expanded|disabled|\d{3,}/;
@@ -136,6 +229,13 @@
     return own;
   }
 
+  // A readable default name for a picked element; the user can rename it in the popup.
+  function nameFor(el) {
+    const label = el.getAttribute('aria-label') || el.getAttribute('title') || (el.innerText || '').trim().split('\n')[0];
+    const name = (label || el.tagName.toLowerCase()).replace(/\s+/g, ' ').trim();
+    return name.length > 40 ? name.slice(0, 39) + '…' : name;
+  }
+
   function startPicker() {
     if (document.getElementById('cud-picker')) return;
     const tip = document.createElement('div');
@@ -148,7 +248,7 @@
       target = el;
       if (!el) return;
       el.classList.add('cud-pick-target');
-      tip.textContent = `${selectorFor(el)}   (↑ parent · ↓ child · click/Enter hide · Esc cancel)`;
+      tip.textContent = `${nameFor(el)}  ·  ${selectorFor(el)}   (↑ parent · ↓ child · click/Enter hide · Esc cancel)`;
     };
     const stop = () => {
       show(null);
@@ -157,14 +257,19 @@
       document.removeEventListener('click', onClick, true);
       document.removeEventListener('keydown', onKey, true);
     };
+    const update = (fn) => chrome.storage.sync.get('cud', ({ cud }) => {
+      const next = cudState(cud);
+      fn(next);
+      chrome.storage.sync.set({ cud: next });
+    });
     const commit = () => {
       if (!target) return stop();
-      const sel = selectorFor(target);
+      const entry = { sel: selectorFor(target), name: nameFor(target), scope: isTaskPage() ? 'task' : 'app' };
       stop();
-      chrome.storage.sync.get('cud', ({ cud }) => {
-        const next = { off: false, enabled: {}, custom: [], ...cud };
-        if (!next.custom.includes(sel)) next.custom.push(sel);
-        chrome.storage.sync.set({ cud: next });
+      update((next) => { if (!next.custom.some((c) => c.sel === entry.sel)) next.custom.push(entry); });
+      toast(`Hidden "${entry.name}"`, {
+        label: 'Undo',
+        run: () => update((next) => { next.custom = next.custom.filter((c) => c.sel !== entry.sel); }),
       });
     };
     const onOver = (e) => { if (e.target !== tip) show(e.target); };

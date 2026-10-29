@@ -5,7 +5,7 @@ Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 
 $root = Split-Path -Parent $PSScriptRoot
 $version = (Get-Content (Join-Path $root 'manifest.json') -Raw | ConvertFrom-Json).version
-$files = @('manifest.json', 'rules.js', 'content.js', 'content.css', 'popup.html', 'popup.js', 'LICENSE') +
+$files = @('manifest.json', 'rules.js', 'content.js', 'background.js', 'content.css', 'popup.html', 'popup.js', 'LICENSE') +
   (Get-ChildItem (Join-Path $root 'icons') -Filter *.png | ForEach-Object { "icons/$($_.Name)" })
 
 $dist = Join-Path $root 'dist'
