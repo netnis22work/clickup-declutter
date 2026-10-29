@@ -15,11 +15,38 @@
   (document.head || document.documentElement).appendChild(style);
 
   // Settings arrive asynchronously, a few milliseconds after ClickUp may already paint.
-  // Bridge that gap with the CSS built on the previous visit, cached in this origin's
-  // localStorage, which a content script can read synchronously at document_start.
+  // Bridge that gap with what was built on the previous visit (the CSS, plus the
+  // placeholder item ids to drop), cached in this origin's localStorage, which a content
+  // script can read synchronously at document_start.
   const CACHE_KEY = 'cud-css-cache';
-  let cachedCss = null;
-  try { cachedCss = localStorage.getItem(CACHE_KEY); } catch {}
+  let cached = null;
+  try { cached = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch {}
+  if (!cached || typeof cached.css !== 'string') cached = null;
+
+  // Placeholder item ids to drop, per ClickUp localStorage key.
+  function placeholderIds() {
+    const out = {};
+    const on = new Set(active().map((r) => r.id));
+    for (const [key, map] of Object.entries(CUD_PLACEHOLDERS)) {
+      out[key] = Object.entries(map).filter(([ruleId]) => on.has(ruleId)).map(([, phId]) => phId);
+    }
+    return out;
+  }
+
+  // ClickUp paints its loading-screen rail and top bar from these cached lists before its
+  // own scripts run, using markup our CSS doesn't cover. Remove hidden items from the lists
+  // first. ClickUp rewrites them with the full set after it loads, so nothing is lost.
+  function filterPlaceholders(ids) {
+    for (const [key, drop] of Object.entries(ids || {})) {
+      if (!CUD_PLACEHOLDERS[key] || !Array.isArray(drop) || !drop.length) continue;
+      try {
+        const list = JSON.parse(localStorage.getItem(key));
+        if (!Array.isArray(list)) continue;
+        const kept = list.filter((item) => !(item && drop.includes(item.id)));
+        if (kept.length !== list.length) localStorage.setItem(key, JSON.stringify(kept));
+      } catch {}
+    }
+  }
 
   const validSelector = (s) => {
     try { document.createDocumentFragment().querySelector(s); return true; } catch { return false; }
@@ -179,14 +206,15 @@
   function apply() {
     const css = buildCss();
     style.textContent = css;
-    try { localStorage.setItem(CACHE_KEY, css); } catch {}
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ css, ph: placeholderIds() })); } catch {}
     lastHealthCheck = 0;
     sweep();
   }
 
-  // Last visit's CSS (or the defaults on a first visit) immediately, then the real
-  // settings once storage answers.
-  style.textContent = cachedCss || buildCss();
+  // Last visit's CSS and placeholder filter (or the defaults on a first visit) immediately,
+  // then the real settings once storage answers.
+  style.textContent = cached ? cached.css : buildCss();
+  filterPlaceholders(cached ? cached.ph : placeholderIds());
   chrome.storage.sync.get('cud', ({ cud }) => { state = cudState(cud); apply(); });
   chrome.storage.onChanged.addListener((ch, area) => {
     if (area !== 'sync' || !ch.cud) return;

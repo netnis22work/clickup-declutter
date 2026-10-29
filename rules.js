@@ -1,7 +1,7 @@
 // Hide-rule catalog. Shared by content.js, popup.js and background.js.
 //   css:     selector(s) hidden with display:none (fast, no flicker)
 //   row:     data-test of a Home-sidebar row (hidden via cdk-tree-node:has(...))
-//   section: name of a Home-sidebar section; header + its children hidden by JS
+//   section: name of a Home-sidebar section; header + its rows hidden by CSS
 //   js:      extra JS pass in content.js for things CSS can't express
 //   def:     on by default
 //   scope:   where the element should exist, for the "rule needs updating" check:
@@ -73,6 +73,20 @@ const CUD_RULES = [
   { id: 'pop-banners', group: 'Popups & nags', label: 'Upgrade / automation banners', def: true, css: 'cu-global-upgrade-to-member-banner, cu-automation-banner', scope: null },
   { id: 'pop-banner-popup', group: 'Popups & nags', label: 'Banner popups', def: true, css: 'cu2-banner-popup', scope: null },
 ];
+
+// On a full page load ClickUp paints a placeholder rail and top bar from JSON lists it
+// caches in localStorage ([{ id, title, icon, ... }]), before its app starts. Rule id →
+// placeholder item id, so content.js can drop hidden items from those lists in time.
+const CUD_PLACEHOLDERS = {
+  'placeholder-sidebar-icons': {
+    'ai-rail': 'ai', 'chat-rail': 'home-chat', 'rail-planner': 'calendar', 'rail-teams': 'teams',
+    'rail-whiteboards': 'whiteboards', 'rail-forms': 'forms', 'rail-clips': 'clips', 'rail-goals': 'goals',
+    'rail-time': 'time-hub', 'rail-dashboards': 'dashboards', 'rail-docs': 'docs',
+  },
+  'placeholder-topbar-icons': {
+    'top-notepad': 'notepad', 'top-clip': 'clip', 'top-stt': 'talk_to_text', 'top-reminder': 'reminder', 'top-docs': 'docs',
+  },
+};
 
 // One-click setups. `enabled` overrides the defaults; `only` turns on just those rules.
 const CUD_PRESETS = [

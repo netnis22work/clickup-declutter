@@ -13,6 +13,6 @@
 - Rule health: notices when a rule stops finding its element after a ClickUp update, marks it with a dot, and offers Report or Ignore in Settings.
 - Settings behind a gear icon: presets (Recommended, Focus, Light touch), copy, save, import and load-file sharing, keyboard shortcut, and reset.
 - Alt+Shift+D toggles Declutter on and off, with an on-page toast.
-- No flash of hidden items: sidebar sections are hidden with pure CSS, and the last-used CSS is applied instantly at page start, before settings finish loading.
+- No flash of hidden items: sidebar sections are hidden with pure CSS, and the last-used CSS is applied instantly at page start, before settings finish loading. Hidden rail and top-bar buttons are also removed from ClickUp's cached loading-screen placeholder, which is drawn before ClickUp's app starts.
 - Picked elements get readable names (click to rename), and a "Hidden · Undo" toast appears right after picking.
 - "Pick element" to hide anything else, with parent/child navigation.
